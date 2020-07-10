@@ -35,9 +35,9 @@ const Disappear = keyframes`
 const Wrapper = styled.div`
   min-height: 100vh;
   width: 100%;
-  padding: 7.9rem 1.5rem 5.5rem;
+  padding: 5.5rem 1.5rem;
   display: flex;
-  flex-flow: column-reverse nowrap; /* REMOVE -reverse */
+  flex-flow: column nowrap;
   align-items: center;
   justify-content: space-between;
   overflow: hidden;
@@ -241,6 +241,7 @@ const ChatContainer = styled.div`
   bottom: 1.5rem;
   left: 1.5rem;
   transition: opacity 0.1s ease-in-out;
+  z-index: 2;
 
   :hover {
     opacity: 1;
@@ -263,6 +264,65 @@ const BlueParagraph = styled.span`
   padding: 0;
   margin: 0;
   font-weight: 500;
+`;
+
+const Table = styled.div`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(100vh - 28.8rem);
+`;
+
+const CardsPlaceholder = styled.div`
+  height: 16rem;
+  width: 12rem;
+  border: 0.4rem solid white;
+  border-radius: 1.5rem;
+`;
+
+const Tooltip = styled.span`
+  position: absolute;
+  left: 0;
+  top: 50%;
+  padding: 0.4rem 0 0.4rem 0.8rem;
+  width: 10rem;
+  height: 100%;
+  margin: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background-color: rgba(0, 0, 0, 0.21);
+  transform: translate(0, -50%);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+`;
+
+const Balance = styled(Paragraph)`
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  margin: 0;
+  background-color: rgba(0, 0, 0, 0.21);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  z-index: 1;
+
+  ::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 5rem 15rem;
+    z-index: 0;
+  }
+
+  :hover {
+    border-radius: 0 0.5rem 0.5rem 0;
+    ${Tooltip} {
+      opacity: 1;
+      transform: translate(-10rem, -50%);
+    }
+  }
 `;
 
 function Single() {
@@ -291,7 +351,7 @@ function Single() {
     setLogs((prevLogs) => [
       ...prevLogs,
       {
-        time: `${hour}:${minute}`,
+        time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
         msg: "You has joined to the game",
       },
     ]);
@@ -371,6 +431,10 @@ function Single() {
         <Icon icon={faArrowLeft} />
         <Paragraph>Leave table</Paragraph>
       </LeaveButton>
+      <Balance>
+        <Tooltip>Balance:</Tooltip>
+        $2478
+      </Balance>
       <TableText>
         <ReactArcText
           text="BLACKJACK PAYS 3 TO 2"
@@ -396,6 +460,10 @@ function Single() {
           </ChatMsg>
         ))}
       </ChatContainer>
+      <Table>
+        <CardsPlaceholder></CardsPlaceholder>
+        <CardsPlaceholder></CardsPlaceholder>
+      </Table>
       <ButtonGroup>
         <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
           Min. ${min}
