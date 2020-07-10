@@ -55,7 +55,11 @@ function Root() {
           <Switch>
             <Route path="/" exact component={Welcome} />
             <Route path="/login" exact component={Login} />
-            <Route path="/play" exact component={Single} />
+            <Route
+              path="/play"
+              exact
+              render={() => <Single userId={userId} />}
+            />
             <Route component={NotFound} />
           </Switch>
         </ThemeProvider>

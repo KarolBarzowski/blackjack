@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes, css } from "styled-components";
+import PropTypes from "prop-types";
+import { db } from "helpers/firebase";
 import backgroundPattern from "assets/images/bg.png";
 import Heading from "components/Heading/Heading";
 import { Link } from "react-router-dom";
@@ -10,11 +12,22 @@ import {
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import ReactArcText from "react-arc-text-fix";
+import CountUp from "react-countup";
 import { gsap } from "gsap";
 
 const SlideIn = keyframes`
   from {
     transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+`;
+
+const SlideInLeft = keyframes`
+  from {
+    transform: translateX(100%);
   }
 
   to {
@@ -167,6 +180,7 @@ const Button = styled.button`
   font-weight: 500;
   padding: 0.8rem;
   height: 4.2rem;
+  min-width: 12.5rem;
   margin: 0 0.5rem ${({ margin }) => (margin ? "1rem" : "-1rem")};
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   cursor: pointer;
@@ -305,6 +319,7 @@ const Balance = styled(Paragraph)`
   padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
   z-index: 1;
+  animation: ${SlideInLeft} 0.75s ease-in-out forwards;
 
   ::before {
     content: "";
@@ -325,7 +340,7 @@ const Balance = styled(Paragraph)`
   }
 `;
 
-function Single() {
+function Single({ userId }) {
   const valueRef = useRef(null);
   const minRef = useRef(null);
   const maxRef = useRef(null);
@@ -336,8 +351,11 @@ function Single() {
   const leaveRef = useRef(null);
   const chatRef = useRef(null);
 
+  const [balance, setBalance] = useState(0);
+  const [prevBalance, setPrevBalance] = useState(0);
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(300);
+  const [isAllIn, setIsAllIn] = useState(false);
   const [sliderValue, setSliderValue] = useState(min);
   const [lastStake, setLastStake] = useState(null);
   const [currentAction, setCurrentAction] = useState("bet");
@@ -356,6 +374,16 @@ function Single() {
       },
     ]);
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      const dbRef = db.collection("users").doc(userId);
+
+      dbRef.onSnapshot((doc) => {
+        setBalance(doc.data().balance);
+      });
+    }
+  }, [userId]);
 
   useEffect(() => {
     console.log("currentAction:", currentAction); // REMOVE
@@ -411,6 +439,15 @@ function Single() {
     }
   }, [currentAction]);
 
+  useEffect(() => {
+    if (balance <= max) setIsAllIn(true);
+    else setIsAllIn(false);
+
+    setTimeout(() => {
+      setPrevBalance(balance);
+    }, 1750);
+  }, [balance, max]);
+
   const handleBet = (stake = sliderValue) => {
     console.log(stake);
     const date = new Date();
@@ -433,7 +470,8 @@ function Single() {
       </LeaveButton>
       <Balance>
         <Tooltip>Balance:</Tooltip>
-        $2478
+        $
+        <CountUp start={prevBalance} end={balance} duration={1.75} delay={0} />
       </Balance>
       <TableText>
         <ReactArcText
@@ -468,8 +506,12 @@ function Single() {
         <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
           Min. ${min}
         </Button>
-        <Button type="button" ref={maxRef} onClick={() => handleBet(max)}>
-          Max. ${max}
+        <Button
+          type="button"
+          ref={maxRef}
+          onClick={() => handleBet(isAllIn ? balance : max)}
+        >
+          {isAllIn ? `All in` : `Max. $${max}`}
         </Button>
         <SliderContainer>
           <Row>
@@ -535,5 +577,13 @@ function Single() {
     </Wrapper>
   );
 }
+
+Single.propTypes = {
+  userId: PropTypes.string,
+};
+
+Single.defaultProps = {
+  userId: null,
+};
 
 export default Single;
