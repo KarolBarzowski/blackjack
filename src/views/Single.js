@@ -256,6 +256,7 @@ const ChatContainer = styled.div`
   left: 1.5rem;
   transition: opacity 0.1s ease-in-out;
   z-index: 2;
+  opacity: 0.38;
 
   :hover {
     opacity: 1;
@@ -269,7 +270,7 @@ const ChatContainer = styled.div`
   ${({ hide }) =>
     hide &&
     css`
-      opacity: 0.38;
+      opacity: 0;
     `}
 `;
 
@@ -350,6 +351,7 @@ function Single({ userId }) {
   const sliderRef = useRef(null);
   const leaveRef = useRef(null);
   const chatRef = useRef(null);
+  const chatTimer = useRef(null);
 
   const [balance, setBalance] = useState(0);
   const [prevBalance, setPrevBalance] = useState(0);
@@ -360,6 +362,7 @@ function Single({ userId }) {
   const [lastStake, setLastStake] = useState(null);
   const [currentAction, setCurrentAction] = useState("bet");
   const [logs, setLogs] = useState([]);
+  const [isChatHidden, setIsChatHidden] = useState(false);
 
   useEffect(() => {
     const date = new Date();
@@ -373,6 +376,13 @@ function Single({ userId }) {
         msg: "You has joined to the game",
       },
     ]);
+
+    chatTimer.current = setTimeout(() => {
+      console.log("hiding");
+      setIsChatHidden(true);
+    }, 5000);
+
+    return () => clearTimeout(chatTimer.current);
   }, []);
 
   useEffect(() => {
@@ -456,10 +466,23 @@ function Single({ userId }) {
     setLogs((prevLogs) => [
       ...prevLogs,
       {
-        time: `${hour}:${minute}`,
+        time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
         msg: "You has joined to the game",
       },
     ]);
+  };
+
+  const handleChatAppear = () => {
+    console.log("appear");
+    clearTimeout(chatTimer.current);
+    setIsChatHidden(false);
+  };
+
+  const handleChatDisappear = () => {
+    console.log("disappear");
+    chatTimer.current = setTimeout(() => {
+      setIsChatHidden(true);
+    }, 5000);
   };
 
   return (
@@ -487,7 +510,12 @@ function Single({ userId }) {
           class="paragraph absolute second"
         />
       </TableText>
-      <ChatContainer hide={true} ref={chatRef}>
+      <ChatContainer
+        hide={isChatHidden}
+        ref={chatRef}
+        onMouseOver={handleChatAppear}
+        onMouseOut={handleChatDisappear}
+      >
         {logs.map(({ time, msg }, i) => (
           <ChatMsg
             key={i.toString()}
