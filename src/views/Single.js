@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import backgroundPattern from "assets/images/bg.png";
 import Heading from "components/Heading/Heading";
 import { Link } from "react-router-dom";
@@ -19,6 +19,16 @@ const SlideIn = keyframes`
 
   to {
     transform: translateX(0);
+  }
+`;
+
+const Disappear = keyframes`
+  from {
+    transform: translateY(3.5rem);
+  }
+
+  to {
+    transform: translateY(0);
   }
 `;
 
@@ -200,6 +210,61 @@ const LeaveButton = styled(Link)`
   }
 `;
 
+const ChatMsg = styled.p`
+  font-size: 1.6rem;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  margin: 0.25rem 0 0;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.34);
+  transition: opacity 0.1s ease-in-out;
+  animation: ${SlideIn} 0.5s ease-in-out backwards 0.05s;
+
+  ${({ hide }) =>
+    hide &&
+    css`
+      display: none;
+    `}
+
+  ${({ disappear }) =>
+    disappear &&
+    css`
+      animation: ${Disappear} 0.5s ease-in-out forwards;
+      transition: opacity 0.5s ease-in-out;
+      opacity: 0;
+    `}
+`;
+
+const ChatContainer = styled.div`
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  transition: opacity 0.1s ease-in-out;
+
+  :hover {
+    opacity: 1;
+
+    ${ChatMsg} {
+      transition: opacity 0.1s ease-in-out;
+      opacity: 1;
+    }
+  }
+
+  ${({ hide }) =>
+    hide &&
+    css`
+      opacity: 0.38;
+    `}
+`;
+
+const BlueParagraph = styled.span`
+  color: ${({ theme }) => theme.blue};
+  padding: 0;
+  margin: 0;
+  font-weight: 500;
+`;
+
 function Single() {
   const valueRef = useRef(null);
   const minRef = useRef(null);
@@ -209,12 +274,28 @@ function Single() {
   const repeatRef = useRef(null);
   const sliderRef = useRef(null);
   const leaveRef = useRef(null);
+  const chatRef = useRef(null);
 
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(300);
   const [sliderValue, setSliderValue] = useState(min);
   const [lastStake, setLastStake] = useState(null);
   const [currentAction, setCurrentAction] = useState("bet");
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    const date = new Date();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
+    setLogs((prevLogs) => [
+      ...prevLogs,
+      {
+        time: `${hour}:${minute}`,
+        msg: "You has joined to the game",
+      },
+    ]);
+  }, []);
 
   useEffect(() => {
     console.log("currentAction:", currentAction); // REMOVE
@@ -272,6 +353,16 @@ function Single() {
 
   const handleBet = (stake = sliderValue) => {
     console.log(stake);
+    const date = new Date();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    setLogs((prevLogs) => [
+      ...prevLogs,
+      {
+        time: `${hour}:${minute}`,
+        msg: "You has joined to the game",
+      },
+    ]);
   };
 
   return (
@@ -294,6 +385,17 @@ function Single() {
           class="paragraph absolute second"
         />
       </TableText>
+      <ChatContainer hide={true} ref={chatRef}>
+        {logs.map(({ time, msg }, i) => (
+          <ChatMsg
+            key={i.toString()}
+            hide={logs.length - 6 >= i}
+            disappear={i !== logs.length - 1}
+          >
+            <BlueParagraph>[{time}]</BlueParagraph> {msg}
+          </ChatMsg>
+        ))}
+      </ChatContainer>
       <ButtonGroup>
         <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
           Min. ${min}
