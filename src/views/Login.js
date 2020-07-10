@@ -241,10 +241,10 @@ function Login() {
     if (isRegister && (password.length || confirmPassword.length)) {
       if (password !== confirmPassword) {
         setIsError(true);
-        setErrorMsg(`Hasła nie są identyczne!`);
+        setErrorMsg(`Passwords are not equal!`);
       } else if (password.length < 6) {
         setIsError(true);
-        setErrorMsg(`Min. 6 znaków!`);
+        setErrorMsg(`Password min. 6 characters!`);
       } else {
         setIsError(false);
         setTimeout(() => setErrorMsg(""), 400);
@@ -258,19 +258,19 @@ function Login() {
   const getErrorMsg = (code) => {
     switch (code) {
       case "auth/email-already-in-use":
-        return "Email jest zajęty!";
+        return "Email is already taken!";
       case "auth/invalid-email":
-        return "Nieprawidłowy email!";
+        return "Invalid email!";
       case "auth/operation-not-allowed":
-        return "Nieznany błąd!";
+        return "Error!";
       case "auth/weak-password":
-        return "Hasło min. 6 znaków!";
+        return "Password min. 6 characters!";
       case "auth/user-disabled":
-        return "Konto jest nieaktywne!";
+        return "Account is disabled!";
       case "auth/wrong-password":
-        return "Złe hasło!";
+        return "Wrong password!";
       case "auth/user-not-found":
-        return "Nie ma takiego użytkownika!";
+        return "User not found!";
       default:
         break;
     }
@@ -282,7 +282,7 @@ function Login() {
     if (isRegister) {
       if (!nick.length) {
         setIsError(true);
-        setErrorMsg("Zapomniałeś o pseudonimie!");
+        setErrorMsg("What about nickname?");
         setIsValidating(false);
       } else {
         auth
@@ -347,14 +347,12 @@ function Login() {
     <Wrapper>
       {isForgotPassword ? (
         <Form onSubmit={handleForgotPassword}>
-          <StyledHeading>Zresetuj hasło</StyledHeading>
+          <StyledHeading>Forgot password</StyledHeading>
           {isEmailSent ? (
             <>
-              <StyledParagraph>
-                Wysłano wiadomość na twojego maila!
-              </StyledParagraph>
+              <StyledParagraph>Reset link sent to your email!</StyledParagraph>
               <Button type="button" onClick={() => setIsForgotPassword(false)}>
-                Wróć do logowania
+                Back to login
               </Button>
             </>
           ) : (
@@ -367,23 +365,24 @@ function Login() {
                   type="email"
                   id="email"
                   name="email"
-                  placeholder="Podaj swój email"
+                  placeholder="Your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </Row>
               <Error appear={isError}>{errorMsg}</Error>
               <Button type="submit" disabled={isValidating}>
-                Resetuj hasło
+                Reset password
+              </Button>
+              <Button type="button" onClick={() => setIsForgotPassword(false)}>
+                Back to login
               </Button>
             </>
           )}
         </Form>
       ) : (
         <Form onSubmit={handleValidate}>
-          <StyledHeading>
-            {isRegister ? "Zarejestruj się" : "Zaloguj się"}
-          </StyledHeading>
+          <StyledHeading>{isRegister ? "Sign up" : "Sign in"}</StyledHeading>
           {isRegister && (
             <Row>
               <Label htmlFor="nick">
@@ -393,7 +392,7 @@ function Login() {
                 type="text"
                 id="nick"
                 name="nick"
-                placeholder="Pseudonim"
+                placeholder="Nickname"
                 value={nick}
                 onChange={(e) => setNick(e.target.value)}
               />
@@ -420,7 +419,7 @@ function Login() {
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
-              placeholder="Hasło"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -440,7 +439,7 @@ function Login() {
                 type={showPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
-                placeholder="Potwierdź hasło"
+                placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -458,17 +457,19 @@ function Login() {
                   <polyline points="20 6 9 17 4 12" />
                 </Checkmark>
               </StyledCheckbox>
-              <StyledParagraph>Loguj automatycznie</StyledParagraph>
+              <StyledParagraph>Remember me</StyledParagraph>
             </CheckboxContainer>
           )}
           <Error appear={isError}>{errorMsg}</Error>
           <Button type="submit" disabled={isValidating}>
-            {isRegister ? "Zarejestruj się" : "Zaloguj się"}
+            {isRegister ? "Sign up" : "Login"}
           </Button>
           <StyledParagraph>
-            {isRegister ? "Masz już konto?" : "Nie masz konta?"}
+            {isRegister
+              ? "Already have an account?"
+              : "Doesn't have an account?"}
             <Link type="button" onClick={() => setIsRegister(!isRegister)}>
-              {isRegister ? "Zaloguj się!" : "Zarejestruj się!"}
+              {isRegister ? "Sign in!" : "Sign up!"}
             </Link>
           </StyledParagraph>
           {!isRegister && (
@@ -476,7 +477,7 @@ function Login() {
               type="button"
               onClick={() => setIsForgotPassword(!isForgotPassword)}
             >
-              Zapomniałem hasła
+              Forgot password?
             </Link>
           )}
         </Form>
