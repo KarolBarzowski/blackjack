@@ -16,6 +16,7 @@ const GlobalStyle = createGlobalStyle`
         font-family: 'Montserrat', sans-serif;
         background-color: rgb(35, 39, 42);
         color: rgba(255, 255, 255, .87);
+        overflow: hidden;
     }
 
     .paragraph {

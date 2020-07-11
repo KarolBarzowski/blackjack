@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, createRef } from "react";
 import styled, { keyframes, css } from "styled-components";
 import PropTypes from "prop-types";
 import { db } from "helpers/firebase";
+import { createDeck, shuffleDeck, deal } from "helpers/functions";
 import backgroundPattern from "assets/images/bg.png";
-import Heading from "components/Heading/Heading";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,6 +14,7 @@ import {
 import ReactArcText from "react-arc-text-fix";
 import CountUp from "react-countup";
 import { gsap } from "gsap";
+import ReactCardFlip from "react-card-flip";
 
 const SlideIn = keyframes`
   from {
@@ -290,10 +291,11 @@ const Table = styled.div`
 `;
 
 const CardsPlaceholder = styled.div`
-  height: 16rem;
-  width: 12rem;
-  border: 0.4rem solid white;
-  border-radius: 1.5rem;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  min-width: 14.4rem;
+  min-height: 23.3rem;
 `;
 
 const Tooltip = styled.span`
@@ -341,6 +343,121 @@ const Balance = styled(Paragraph)`
   }
 `;
 
+const CardValue = styled.p`
+  font-family: "Montserrat", sans-serif;
+  font-size: 3.4rem;
+  font-weight: 600;
+  color: ${({ color, theme }) => theme[color]};
+  margin: 0;
+
+  ${({ big }) =>
+    big &&
+    css`
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14.4rem;
+    `}
+
+  ${({ small }) =>
+    small &&
+    css`
+      margin: -1.5rem 0 0 0.1rem;
+      font-size: 4rem;
+    `}
+`;
+
+const Card = styled.div`
+  position: relative;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: space-between;
+  height: 23.3rem;
+  width: 14.4rem;
+  padding: 0 0.5rem;
+  background-color: #ffffff;
+  box-shadow: 0.3rem -0.3rem 5px rgba(0, 0, 0, 0.16),
+    0.3rem -0.3rem 5px rgba(0, 0, 0, 0.23);
+  border-radius: 1rem;
+  user-select: none;
+`;
+
+const Top = styled.div`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+  width: 100%;
+  user-select: none;
+`;
+
+const Bottom = styled(Top)`
+  transform: rotate(180deg);
+`;
+
+const Deck = styled.div`
+  position: absolute;
+  top: 25vh;
+  right: 5%;
+  height: 23.3rem;
+  width: 14.4rem;
+  padding: 1rem;
+  box-shadow: 2.2rem -2.2rem 1rem 1rem rgba(0, 0, 0, 0.34),
+    -3rem 3rem 1rem rgba(0, 0, 0, 0.34);
+  background-color: #ffffff;
+  /* transform: rotate(-30deg) skew(25deg); */
+  border-radius: 0 1rem 0 0;
+
+  ::before {
+    content: "";
+    position: absolute;
+    top: 2.6rem;
+    left: -5.2rem;
+    height: 100%;
+    width: 5.2rem;
+    background: #ffffff;
+    transform: rotate(0deg) skewY(-45deg);
+  }
+
+  ::after {
+    content: "";
+    position: absolute;
+    bottom: -5.2rem;
+    left: -2.6rem;
+    height: 5.2rem;
+    width: 100%;
+    background: #ffffff;
+    transform: rotate(0deg) skewX(-45deg);
+  }
+`;
+
+const Reverse = styled.div`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  height: calc(100% - 1rem);
+  width: calc(100% - 1rem);
+  border: 0.2rem solid #000000;
+  border-radius: 1rem;
+  background-image: linear-gradient(
+    45deg,
+    #000000 16.67%,
+    #ffffff 16.67%,
+    #ffffff 50%,
+    #000000 50%,
+    #000000 66.67%,
+    #ffffff 66.67%,
+    #ffffff 100%
+  );
+  background-size: 12px 12px;
+`;
+
+const CardWrapper = styled.div`
+  position: absolute;
+  visibility: hidden;
+`;
+
 function Single({ userId }) {
   const valueRef = useRef(null);
   const minRef = useRef(null);
@@ -352,6 +469,9 @@ function Single({ userId }) {
   const leaveRef = useRef(null);
   const chatRef = useRef(null);
   const chatTimer = useRef(null);
+  const deckRef = useRef(null);
+  const playerHandRef = useRef(null);
+  const dealerHandRef = useRef(null);
 
   const [balance, setBalance] = useState(0);
   const [prevBalance, setPrevBalance] = useState(0);
@@ -363,6 +483,15 @@ function Single({ userId }) {
   const [currentAction, setCurrentAction] = useState("bet");
   const [logs, setLogs] = useState([]);
   const [isChatHidden, setIsChatHidden] = useState(false);
+  const [deck, setDeck] = useState(shuffleDeck(createDeck()));
+  const [playerHand, setPlayerHand] = useState([]);
+  const [dealerHand, setDealerHand] = useState([]);
+  const [flippedPlayer, setFlippedPlayer] = useState([]);
+  const [flippedDealer, setFlippedDealer] = useState([]);
+  const [playerCardsCounter, setPlayerCardsCounter] = useState(1);
+  const [dealerCardsCounter, setDealerCardsCounter] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [queue, setQueue] = useState([]);
 
   useEffect(() => {
     const date = new Date();
@@ -378,7 +507,6 @@ function Single({ userId }) {
     ]);
 
     chatTimer.current = setTimeout(() => {
-      console.log("hiding");
       setIsChatHidden(true);
     }, 5000);
 
@@ -396,12 +524,20 @@ function Single({ userId }) {
   }, [userId]);
 
   useEffect(() => {
+    clearTimeout(chatTimer);
+    setIsChatHidden(false);
+    chatTimer.current = setTimeout(() => {
+      setIsChatHidden(true);
+    }, 5000);
+  }, [logs]);
+
+  useEffect(() => {
     console.log("currentAction:", currentAction); // REMOVE
+
+    gsap.defaults({ duration: 0.75, ease: "power2.inOut" });
 
     switch (currentAction) {
       case "bet":
-        gsap.defaults({ duration: 0.75, ease: "power2.inOut" });
-
         const slideInUp = (element) => {
           const tl = gsap.timeline();
 
@@ -433,7 +569,7 @@ function Single({ userId }) {
           return tl;
         };
 
-        const master = gsap
+        const betTl = gsap
           .timeline()
           .add(slideInUp(valueRef.current))
           .add(slideInUp(sliderRef.current), 0.25)
@@ -443,10 +579,102 @@ function Single({ userId }) {
           .add(slideInRight(leaveRef.current), 0.25);
 
         break;
+      case "decision":
+        const slideOutDown = (element) => {
+          const tl = gsap.timeline();
 
+          tl.fromTo(
+            element,
+            {
+              opacity: 1,
+              y: 0,
+            },
+            { y: 200, opacity: 0 }
+          );
+
+          return tl;
+        };
+
+        const slideOutLeft = (element) => {
+          const tl = gsap.timeline();
+
+          tl.fromTo(
+            element,
+            {
+              x: 0,
+            },
+            {
+              x: "-=200px",
+            }
+          );
+
+          return tl;
+        };
+
+        const decisionTl = gsap
+          .timeline()
+          .add(slideOutDown(valueRef.current))
+          .add(slideOutDown(sliderRef.current), 0.25)
+          .add(slideOutDown([maxRef.current, doubleRef.current]), 0.5)
+          .add(slideOutDown([minRef.current, repeatRef.current]), 0.75)
+          .add(slideOutDown(confirmRef.current), 1)
+          .add(slideOutLeft(leaveRef.current), 0.25);
+
+        // // deal 2 cards to player
+        // setPlayerHand([deal(deck), deal(deck)]);
+        // setPlayerCardsCounter(0);
+        // setTimeout(() => {
+        //   setPlayerCardsCounter(1);
+        // }, 500);
+
+        // // deal 2 cards to dealer
+        // setDealerHand([deal(deck), deal(deck)]);
+        // setDealerCardsCounter(0);
+        // setDealerCardsCounter(1);
+
+        // add to queue 2 cards for player, 2 for dealer
+
+        setQueue([
+          {
+            destination: "player",
+            card: deal(deck),
+            number: 0,
+          },
+          {
+            destination: "dealer",
+            card: deal(deck),
+            number: 0,
+          },
+          {
+            destination: "player",
+            card: deal(deck),
+            number: 1,
+          },
+          {
+            destination: "dealer",
+            card: deal(deck),
+            number: 1,
+          },
+        ]);
+
+        // setTimeout(() => {
+        //   const newArray = flippedPlayer;
+        //   newArray[0] = 0;
+        //   setFlippedPlayer(newArray);
+        // }, 750);
+        // setTimeout(() => {
+        //   const newArray = flippedPlayer;
+        //   newArray[1] = 0;
+        //   setFlippedPlayer(newArray);
+        // }, 2750);
+        // setTimeout(() => {
+        //   setPlayerHand((prevHand) => [...prevHand, deal(deck)]);
+        // }, 2000);
+        break;
       default:
         break;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentAction]);
 
   useEffect(() => {
@@ -458,28 +686,176 @@ function Single({ userId }) {
     }, 1750);
   }, [balance, max]);
 
-  const handleBet = (stake = sliderValue) => {
-    console.log(stake);
+  useEffect(() => {
+    console.log("currentqueue:", queue);
+    if (!isAnimating && queue.length) {
+      setIsAnimating(true);
+
+      const { destination, card, number } = queue.shift();
+      setQueue(queue);
+
+      if (destination === "player")
+        setPlayerHand((prevHand) => [...prevHand, card]);
+      else setDealerHand((prevHand) => [...prevHand, card]);
+
+      setTimeout(() => {
+        animateDeal(destination, number);
+      }, 500);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue, isAnimating]);
+
+  useEffect(() => {
+    if (playerHand.length)
+      setFlippedPlayer((prevFlipped) => [...prevFlipped, 1]);
+  }, [playerHand]);
+
+  useEffect(() => {
+    if (dealerHand.length)
+      setFlippedDealer((prevFlipped) => [...prevFlipped, 1]);
+  }, [dealerHand]);
+
+  const animateDeal = (destination, number) => {
+    gsap.defaults({ ease: "power2.inOut" });
+
+    const dealCard = (element) => {
+      console.log(element);
+      const deckRect = deckRef.current.getBoundingClientRect();
+      let handRect;
+      if (destination === "player")
+        handRect = playerHandRef.current.getBoundingClientRect();
+      else handRect = dealerHandRef.current.getBoundingClientRect();
+
+      const tl = gsap.timeline();
+
+      tl.fromTo(
+        element,
+        {
+          x: deckRect.right - handRect.right,
+          y: deckRect.top - handRect.top,
+          visibility: "visible",
+        },
+        {
+          x: number > 0 ? 55 : 0,
+          y: 0,
+          rotate: Math.random() < 0.5 ? 3 : -3,
+          duration: 1.5,
+        },
+        0
+      ).call(
+        () => {
+          if (destination === "player") {
+            const newArray = flippedPlayer;
+            newArray[number] = 0;
+            setFlippedPlayer(newArray);
+          } else {
+            const newArray = flippedDealer;
+            newArray[number] = 0;
+            setFlippedDealer(newArray);
+          }
+        },
+        null,
+        0.75
+      );
+
+      return tl;
+    };
+
+    if (destination === "player") {
+      const masterTl = gsap
+        .timeline()
+        .add(dealCard(playerHandRef.current.children[number]))
+        .call(() => {
+          setIsAnimating(false);
+        });
+    } else {
+      const masterTl = gsap
+        .timeline()
+        .add(dealCard(dealerHandRef.current.children[number]))
+        .call(() => {
+          setIsAnimating(false);
+        });
+    }
+  };
+
+  // useEffect(() => {
+  //   const number = playerCardsCounter;
+
+  //   setIsAnimating(true);
+
+  //   const newArray = flippedPlayer;
+  //   newArray[number] = 1;
+  //   setFlippedPlayer(newArray);
+
+  //   gsap.defaults({ duration: 0.75, ease: "power2.inOut" });
+
+  //   const dealCard = (element) => {
+  //     const deckRect = deckRef.current.getBoundingClientRect();
+  //     const handRect = playerHandRef.current.getBoundingClientRect();
+
+  //     console.log(deckRect.right, handRect.right);
+
+  //     const tl = gsap.timeline();
+  //     tl.set(element, { autoAlpha: 0 });
+
+  //     tl.fromTo(
+  //       element,
+  //       {
+  //         x: deckRect.right - handRect.right,
+  //         y: deckRect.top - handRect.top,
+  //         autoAlpha: 1,
+  //       },
+  //       {
+  //         x: number > 0 ? -89 : 0,
+  //         y: 0,
+  //         rotate: Math.random() < 0.5 ? 3 : -3,
+  //         duration: 1.75,
+  //       }
+  //     ).call(() => {
+  //       const newArray = flippedPlayer;
+  //       newArray[number] = 0;
+  //       setFlippedPlayer(newArray);
+  //     });
+
+  //     return tl;
+  //   };
+
+  //   const masterTl = gsap
+  //     .timeline()
+  //     .add(dealCard(playerHandRef.current.children[number]))
+  //     .call(() => {
+  //       setIsAnimating(false);
+  //     });
+
+  //   console.log("update");
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [playerCardsCounter]);
+
+  const handleBet = (stake = parseFloat(sliderValue)) => {
+    // REMOVE \/
     const date = new Date();
     const hour = date.getHours();
     const minute = date.getMinutes();
+
     setLogs((prevLogs) => [
       ...prevLogs,
       {
         time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
-        msg: "You has joined to the game",
+        msg: "Decision stage called",
       },
     ]);
+    // REMOVE /\
+
+    setCurrentAction("decision");
   };
 
   const handleChatAppear = () => {
-    console.log("appear");
     clearTimeout(chatTimer.current);
     setIsChatHidden(false);
   };
 
   const handleChatDisappear = () => {
-    console.log("disappear");
     chatTimer.current = setTimeout(() => {
       setIsChatHidden(true);
     }, 5000);
@@ -526,9 +902,70 @@ function Single({ userId }) {
           </ChatMsg>
         ))}
       </ChatContainer>
+      <Deck ref={deckRef}>
+        <Reverse />
+      </Deck>
       <Table>
-        <CardsPlaceholder></CardsPlaceholder>
-        <CardsPlaceholder></CardsPlaceholder>
+        <CardsPlaceholder ref={dealerHandRef}>
+          {dealerHand &&
+            dealerHand.map(({ value, suit, color }, i) => (
+              <CardWrapper>
+                <ReactCardFlip isFlipped={flippedDealer[i]}>
+                  <Card>
+                    <Top>
+                      <CardValue color={color}>{value}</CardValue>
+                      <CardValue small color={color}>
+                        {suit}
+                      </CardValue>
+                    </Top>
+                    <CardValue big color={color}>
+                      {suit}
+                    </CardValue>
+                    <Bottom>
+                      <CardValue color={color}>{value}</CardValue>
+                      <CardValue small color={color}>
+                        {suit}
+                      </CardValue>
+                    </Bottom>
+                  </Card>
+
+                  <Card>
+                    <Reverse />
+                  </Card>
+                </ReactCardFlip>
+              </CardWrapper>
+            ))}
+        </CardsPlaceholder>
+        <CardsPlaceholder ref={playerHandRef}>
+          {playerHand &&
+            playerHand.map(({ value, suit, color }, i) => (
+              <CardWrapper>
+                <ReactCardFlip isFlipped={flippedPlayer[i]}>
+                  <Card>
+                    <Top>
+                      <CardValue color={color}>{value}</CardValue>
+                      <CardValue small color={color}>
+                        {suit}
+                      </CardValue>
+                    </Top>
+                    <CardValue big color={color}>
+                      {suit}
+                    </CardValue>
+                    <Bottom>
+                      <CardValue color={color}>{value}</CardValue>
+                      <CardValue small color={color}>
+                        {suit}
+                      </CardValue>
+                    </Bottom>
+                  </Card>
+
+                  <Card>
+                    <Reverse />
+                  </Card>
+                </ReactCardFlip>
+              </CardWrapper>
+            ))}
+        </CardsPlaceholder>
       </Table>
       <ButtonGroup>
         <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
@@ -542,13 +979,8 @@ function Single({ userId }) {
           {isAllIn ? `All in` : `Max. $${max}`}
         </Button>
         <SliderContainer>
-          <Row>
-            <Button
-              type="button"
-              ref={confirmRef}
-              margin
-              onClick={() => handleBet()}
-            >
+          <Row ref={confirmRef}>
+            <Button type="button" margin onClick={() => handleBet()}>
               CONFIRM
             </Button>
           </Row>
@@ -563,7 +995,7 @@ function Single({ userId }) {
             />
             <Paragraph>${max}</Paragraph>
           </Row>
-          <Row>
+          <Row ref={valueRef}>
             <ButtonIcon
               type="button"
               disabled={parseFloat(sliderValue) <= min}
@@ -573,7 +1005,7 @@ function Single({ userId }) {
             >
               <Icon icon={faMinus} />
             </ButtonIcon>
-            <Value ref={valueRef}>${sliderValue}</Value>
+            <Value>${sliderValue}</Value>
             <ButtonIcon
               type="button"
               disabled={parseFloat(sliderValue) >= max}

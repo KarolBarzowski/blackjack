@@ -55,7 +55,7 @@ const Welcome = () => (
     <Heading>Choose game mode</Heading>
     <Row>
       <Tile to="play">
-        <Paragraph>Solo</Paragraph>
+        <Paragraph>One Player</Paragraph>
       </Tile>
       <Tile to="rooms">
         <Paragraph>With other players</Paragraph>

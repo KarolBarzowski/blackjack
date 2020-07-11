@@ -26,4 +26,6 @@ export const theme = {
   textSecondary: "rgba(255, 255, 255, .60)",
   blue: "rgb(0, 132, 255)",
   table: "rgb(36, 138, 61)",
+  black: "rgb(28, 28, 30)",
+  red: "rgb(255, 69, 58)",
 };
