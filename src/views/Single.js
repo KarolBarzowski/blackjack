@@ -31,6 +31,7 @@ import Card from "components/Card";
 import Reverse from "components/Reverse";
 import Deck from "components/Deck";
 import Score from "components/Score";
+import Winner from "components/Winner";
 
 import { dummyData } from "helpers/dummyData";
 
@@ -106,6 +107,7 @@ const Value = styled(Paragraph)`
   border-radius: 0.5rem;
   padding: 0.3rem 0;
   min-width: 7rem;
+  z-index: 2;
 `;
 
 const Row = styled.div`
@@ -210,6 +212,8 @@ function Single({ userId }) {
   const standRef = useRef(null);
   const doubleDownRef = useRef(null);
   const splitRef = useRef(null);
+  const balanceRef = useRef(null);
+  const stakeRef = useRef(null);
 
   const [balance, setBalance] = useState(0);
   const [prevBalance, setPrevBalance] = useState(0);
@@ -238,7 +242,9 @@ function Single({ userId }) {
   const [isSplit, setIsSplit] = useState(false);
   const [canSplit, setCanSplit] = useState(false);
   const [isBlackjack, setIsBlackjack] = useState(false);
+  const [isDraw, setIsDraw] = useState(false);
   const [winner, setWinner] = useState(null);
+  const [isStand, setIsStand] = useState(false);
 
   useEffect(() => {
     const date = new Date();
@@ -269,10 +275,16 @@ function Single({ userId }) {
   }, [userId]);
 
   useEffect(() => {
-    if (winner) console.log(winner);
-  }, [winner]);
+    if (winner || isDraw) {
+      setCurrentAction("win");
+    }
+  }, [winner, isDraw]);
 
   useEffect(() => {
+    const date = new Date();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+
     gsap.defaults({ duration: 0.75, ease: "power2.inOut" });
 
     switch (currentAction) {
@@ -299,8 +311,18 @@ function Single({ userId }) {
           .add(slideInUp(confirmRef.current), 1)
           .add(slideInRight(leaveRef.current), 0.25);
 
+        setLogs((prevLogs) => [
+          ...prevLogs,
+          {
+            time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
+            msg: "A new round has begun",
+          },
+        ]);
+
         break;
       case "decision":
+        setIsAnimating(true);
+
         gsap
           .timeline()
           .add(
@@ -315,7 +337,8 @@ function Single({ userId }) {
           .add(slideOutDown(confirmRef.current), 1)
           .add(slideOutLeft(leaveRef.current), 0.25)
           .call(
-            () =>
+            () => {
+              setIsAnimating(false);
               setQueue([
                 {
                   destination: "player",
@@ -337,7 +360,8 @@ function Single({ userId }) {
                   card: deal(deck),
                   number: 1,
                 },
-              ]),
+              ]);
+            },
             null,
             "-=1"
           );
@@ -347,6 +371,72 @@ function Single({ userId }) {
           .delay(4)
           .add(slideInUp([doubleDownRef.current, standRef.current]))
           .add(slideInUp([hitRef.current, splitRef.current]), 0.25);
+
+        break;
+      case "win":
+        setIsAnimating(true);
+
+        const balanceRect = balanceRef.current.getBoundingClientRect();
+        const stakeRect = stakeRef.current.getBoundingClientRect();
+
+        setFlippedDealer(() => 0);
+
+        gsap
+          .timeline()
+          .add(slideOutDown([hitRef.current, splitRef.current]))
+          .add(slideOutDown([doubleDownRef.current, standRef.current]), 0.25)
+          .fromTo(
+            stakeRef.current,
+            { x: 0, y: 0 },
+            {
+              x:
+                winner === "player" || isDraw
+                  ? balanceRect.right - stakeRect.right
+                  : 0,
+              y:
+                winner === "player" || isDraw
+                  ? balanceRect.top - stakeRect.top
+                  : 200,
+              duration: winner === "player" || isDraw ? 1.75 : 0.75,
+            }
+          )
+          .to(stakeRef.current, { autoAlpha: 0 })
+          .call(() => {
+            if (winner === "player") {
+              setBalance(
+                (prevBalance) =>
+                  prevBalance +
+                  parseFloat(sliderValue) +
+                  parseFloat(sliderValue) * (isBlackjack ? 1.5 : 1)
+              );
+            } else if (isDraw) {
+              setBalance(
+                (prevBalance) => prevBalance + parseFloat(sliderValue)
+              );
+            }
+          });
+
+        setLogs((prevLogs) => [
+          ...prevLogs,
+          {
+            time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
+            msg: `Dealer ${dealerTotalScore}: ${dealerHand
+              .map(({ value, suit }) => `${value}${suit} `)
+              .join(" ")}`,
+          },
+          {
+            time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
+            msg: isDraw
+              ? `Draw! Your hand ${playerScore}: ${playerHand
+                  .map(({ value, suit }) => `${value}${suit}`)
+                  .join(" ")}`
+              : `You ${winner === "player" ? "won" : "lost"} $${
+                  isBlackjack ? sliderValue * 1.5 : sliderValue
+                } with ${playerScore}: ${playerHand
+                  .map(({ value, suit }) => `${value}${suit}`)
+                  .join(" ")}`,
+          },
+        ]);
 
         break;
       default:
@@ -374,26 +464,39 @@ function Single({ userId }) {
   }, [balance, max]);
 
   useEffect(() => {
-    if (playerScore === 21) {
-      setIsBlackjack(true);
-      setWinner("player");
-    } else if (playerScore > 21) {
-      setWinner("dealer");
+    switch (true) {
+      case playerScore > 21:
+      case dealerScore === 21:
+        setWinner("dealer");
+        break;
+      case dealerScore > 21:
+        setWinner("player");
+        break;
+      case playerScore === 21 && dealerScore < 21:
+        setWinner("player");
+        setIsBlackjack(true);
+        break;
+
+      default:
+        break;
+    }
+
+    if (isStand) {
+      if (playerScore > dealerScore && playerScore < 21) {
+        setWinner("player");
+      } else if (playerScore < dealerScore && dealerScore < 21) {
+        setWinner("dealer");
+      } else if (playerScore === dealerScore) {
+        setIsDraw(true);
+      }
     }
 
     setTimeout(() => {
       setPrevPlayerScore(playerScore);
     }, 1000);
-  }, [playerScore]);
+  }, [playerScore, dealerScore, isStand]);
 
   useEffect(() => {
-    if (dealerScore === 21) {
-      setIsBlackjack(true);
-      setWinner("dealer");
-    } else if (dealerScore > 21) {
-      setWinner("player");
-    }
-
     setTimeout(() => {
       setPrevDealerScore(dealerScore);
     }, 1000);
@@ -486,14 +589,53 @@ function Single({ userId }) {
 
   const handleBet = (stake = parseFloat(sliderValue)) => {
     setCurrentAction("decision");
-
     setSliderValue(stake);
     setBalance(balance - stake);
   };
 
-  const handleHit = () => {};
+  const handleHit = () => {
+    setQueue((prevQueue) => [
+      ...prevQueue,
+      {
+        destination: "player",
+        card: deal(deck),
+        number: playerCardsCounter + 1,
+      },
+    ]);
+    setPlayerCardsCounter((prevCount) => prevCount + 1);
+  };
 
-  const handleStand = () => {};
+  const handleStand = () => {
+    setFlippedDealer([0, 0]);
+
+    let score = 0;
+
+    dealerHand.forEach(({ value }, i) => {
+      score = getCardValue(value, score);
+    });
+
+    setDealerScore(score);
+
+    while (score <= 16) {
+      const card = deal(deck);
+
+      setQueue((prevQueue) => [
+        ...prevQueue,
+        {
+          destination: "dealer",
+          card,
+          number: dealerCardsCounter + 1,
+        },
+      ]);
+
+      score = getCardValue(card.value, score);
+      console.log("score:", score);
+    }
+
+    if (score >= 17) {
+      setIsStand(true);
+    }
+  };
 
   const handleDoubleDown = () => {};
 
@@ -501,11 +643,12 @@ function Single({ userId }) {
 
   return (
     <Wrapper>
+      {winner && <Winner winner={winner} isBlackjack={isBlackjack} />}
       <LeaveButton to="/" ref={leaveRef}>
         <Icon icon={faArrowLeft} />
         <StyledParagraph>Leave table</StyledParagraph>
       </LeaveButton>
-      <Balance start={prevBalance} end={balance} />
+      <Balance start={prevBalance} end={balance} ref={balanceRef} />
       <TableText>
         <Text />
       </TableText>
@@ -526,10 +669,10 @@ function Single({ userId }) {
               />
             ))}
           {dealerScore !== 0 && (
-            <Score>
+            <Score isWin={winner === "dealer"} isLose={winner === "player"}>
               <CountUp
                 start={prevDealerScore}
-                end={dealerScore}
+                end={winner || isStand ? dealerTotalScore : dealerScore}
                 duration={1}
                 delay={0}
               />
@@ -548,7 +691,7 @@ function Single({ userId }) {
               />
             ))}
           {playerScore !== 0 && (
-            <Score>
+            <Score isWin={winner === "player"} isLose={winner === "dealer"}>
               <CountUp
                 start={prevPlayerScore}
                 end={playerScore}
@@ -561,7 +704,12 @@ function Single({ userId }) {
       </Table>
       <ButtonGroup>
         <ButtonGroup>
-          <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
+          <Button
+            type="button"
+            ref={minRef}
+            onClick={() => handleBet(min)}
+            disabled={isAnimating}
+          >
             Min. ${min}
           </Button>
 
@@ -569,24 +717,40 @@ function Single({ userId }) {
             type="button"
             ref={maxRef}
             onClick={() => handleBet(isAllIn ? balance : max)}
+            disabled={isAnimating}
           >
             {isAllIn ? `All in` : `Max. $${max}`}
           </Button>
         </ButtonGroup>
 
         <ButtonGroup absolute left>
-          <Button type="button" ref={hitRef} onClick={handleHit}>
+          <Button
+            type="button"
+            ref={hitRef}
+            onClick={handleHit}
+            disabled={isAnimating}
+          >
             HIT
           </Button>
 
-          <Button type="button" ref={standRef} onClick={handleStand}>
+          <Button
+            type="button"
+            ref={standRef}
+            onClick={handleStand}
+            disabled={isAnimating}
+          >
             STAND
           </Button>
         </ButtonGroup>
 
         <SliderContainer>
           <Row ref={confirmRef}>
-            <Button type="button" margin onClick={() => handleBet()}>
+            <Button
+              type="button"
+              margin
+              onClick={() => handleBet()}
+              disabled={isAnimating}
+            >
               CONFIRM
             </Button>
           </Row>
@@ -611,7 +775,7 @@ function Single({ userId }) {
             >
               <Icon icon={faMinus} />
             </ButtonIcon>
-            <Value>${sliderValue}</Value>
+            <Value ref={stakeRef}>${sliderValue}</Value>
             <ButtonIcon
               type="button"
               disabled={parseFloat(sliderValue) >= (isAllIn ? balance : max)}
@@ -628,7 +792,7 @@ function Single({ userId }) {
           <Button
             type="button"
             ref={doubleRef}
-            disabled={!lastStake}
+            disabled={!lastStake || isAnimating}
             onClick={() => handleBet(lastStake * 2)}
           >
             DOUBLE {lastStake && `$${lastStake * 2}`}
@@ -637,7 +801,7 @@ function Single({ userId }) {
           <Button
             type="button"
             ref={repeatRef}
-            disabled={!lastStake}
+            disabled={!lastStake || isAnimating}
             onClick={() => handleBet(lastStake * 2)}
           >
             REPEAT {lastStake && `$${lastStake}`}
@@ -649,7 +813,7 @@ function Single({ userId }) {
             type="button"
             ref={doubleDownRef}
             onClick={handleDoubleDown}
-            disabled={!canDouble}
+            disabled={!canDouble || isAnimating}
           >
             DOUBLE {canDouble && `$${sliderValue}`}
           </Button>
@@ -658,7 +822,7 @@ function Single({ userId }) {
             type="button"
             ref={splitRef}
             onClick={handleSplit}
-            disabled={!canSplit || !isSplit}
+            disabled={!canSplit || !isSplit || isAnimating}
           >
             SPLIT {canSplit && `$${sliderValue}`}
           </Button>

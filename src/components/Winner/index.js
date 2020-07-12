@@ -1,0 +1,82 @@
+import React from "react";
+import styled, { keyframes } from "styled-components";
+
+const Appear = keyframes`
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    };
+`;
+
+const Disappear = keyframes`
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    };
+`;
+
+const SlideInOut = keyframes`
+    0% {
+        transform: translateX(-100vw);
+    }
+
+    25% {
+        transform: translateX(0);
+    };
+
+    75% {
+        transform: translateX(0);
+    };
+
+    100% {
+        transform: translateX(100vw);
+    }
+`;
+
+const Wrapper = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ isWin }) =>
+    isWin ? "rgba(48, 209, 88, .6)" : "rgba(255, 69, 58, .6)"};
+  height: 14.4rem;
+  width: 100%;
+  transform: translateY(-50%);
+  opacity: 0;
+  z-index: 3;
+  animation: ${Appear} 0.3s ease-in-out 0.3s forwards,
+    ${Disappear} 0.3s ease-in-out 2.8s forwards;
+  overflow: hidden;
+`;
+
+const Text = styled.h1`
+  font-size: 3.4rem;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  text-shadow: #000000 0px 0px 7px;
+  animation: ${SlideInOut} 3s ease-in-out forwards;
+`;
+
+const Winner = ({ winner, isBlackjack }) => (
+  <Wrapper isWin={winner === "player"}>
+    <Text>
+      {winner === "player"
+        ? isBlackjack
+          ? "BLACKJACK! You win!"
+          : "You win!"
+        : "You lose!"}
+    </Text>
+  </Wrapper>
+);
+
+export default Winner;

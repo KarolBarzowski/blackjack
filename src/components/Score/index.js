@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 
 const Appear = keyframes`
     from {
@@ -22,6 +22,7 @@ const Score = styled.p`
   border-radius: 0.5rem;
   padding: 0.3rem 0.6rem;
   min-width: 5.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   animation: ${Appear} 0.15s ease-in-out forwards;
 
   ::before {
@@ -36,6 +37,26 @@ const Score = styled.p`
     border-right: 0.65rem solid transparent;
     border-bottom: 0.8rem solid rgba(0, 0, 0, 0.21);
   }
+
+  ${({ isWin }) =>
+    isWin &&
+    css`
+      background-color: ${({ theme }) => theme.green};
+
+      ::before {
+        border-bottom-color: ${({ theme }) => theme.green};
+      }
+    `}
+
+  ${({ isLose }) =>
+    isLose &&
+    css`
+      background-color: ${({ theme }) => theme.red};
+
+      ::before {
+        border-bottom-color: ${({ theme }) => theme.red};
+      }
+    `}
 `;
 
 export default Score;

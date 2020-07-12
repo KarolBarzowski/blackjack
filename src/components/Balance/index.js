@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, forwardRef } from "react";
 import styled, { keyframes } from "styled-components";
 import CountUp from "react-countup";
 import { SlideInLeft } from "helpers/animations";
@@ -73,7 +73,7 @@ const Wrapper = styled(Paragraph)`
   }
 `;
 
-function Balance({ start, end }) {
+const Balance = forwardRef(({ start, end }, ref) => {
   const [isTooltipHidden, setIsTooltipHidden] = useState(false);
 
   useEffect(() => {
@@ -83,12 +83,12 @@ function Balance({ start, end }) {
   }, []);
 
   return (
-    <Wrapper>
+    <Wrapper ref={ref}>
       <Tooltip hide={isTooltipHidden}>Balance:</Tooltip>
       $
       <CountUp start={start} end={end} duration={1.75} delay={0} />
     </Wrapper>
   );
-}
+});
 
 export default Balance;
