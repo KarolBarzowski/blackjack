@@ -9,7 +9,7 @@ import Welcome from "views/Welcome";
 import NotFound from "views/NotFound";
 import Single from "views/Single";
 import Login from "views/Login";
-import Nav from "components/Nav/Nav";
+import Nav from "components/Nav";
 
 function Root() {
   const [isUser, setIsUser] = useState(true);

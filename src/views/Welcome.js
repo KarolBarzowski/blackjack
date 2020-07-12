@@ -1,7 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import Heading from "components/Heading/Heading";
+import Heading from "components/Heading";
+import Paragraph from "components/Paragraph";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -43,13 +44,6 @@ const Row = styled.div`
   height: 80vh;
 `;
 
-const Paragraph = styled.p`
-  font-size: 2.1rem;
-  font-family: "Montserrat", sans-serif;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-`;
-
 const Welcome = () => (
   <Wrapper>
     <Heading>Choose game mode</Heading>
@@ -57,7 +51,7 @@ const Welcome = () => (
       <Tile to="play">
         <Paragraph>One Player</Paragraph>
       </Tile>
-      <Tile to="rooms">
+      <Tile to="tables">
         <Paragraph>With other players</Paragraph>
       </Tile>
     </Row>

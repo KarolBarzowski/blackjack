@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
 import { auth, session, db } from "helpers/firebase";
 import { Redirect } from "react-router-dom";
-import Heading from "components/Heading/Heading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUserCircle,
@@ -11,6 +10,7 @@ import {
   faEye,
   faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
+import Heading from "components/Heading";
 
 const Wrapper = styled.div`
   min-height: 100vh;
