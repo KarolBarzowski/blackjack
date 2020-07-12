@@ -10,9 +10,10 @@ import {
   faMinus,
   faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
+import CountUp from "react-countup";
 import backgroundPattern from "assets/images/bg.png";
 import { ReactComponent as Text } from "assets/images/text.svg";
-import { createDeck, shuffleDeck, deal } from "helpers/functions";
+import { createDeck, shuffleDeck, deal, getCardValue } from "helpers/functions";
 import { SlideIn, animateDeal } from "helpers/animations";
 import ButtonIcon from "components/ButtonIcon";
 import Paragraph from "components/Paragraph";
@@ -22,6 +23,7 @@ import Balance from "components/Balance";
 import Card from "components/Card";
 import Reverse from "components/Reverse";
 import Deck from "components/Deck";
+import Score from "components/Score";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -164,9 +166,11 @@ const Table = styled.div`
 `;
 
 const CardsPlaceholder = styled.div`
+  position: relative;
   display: flex;
   flex-flow: row nowrap;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: center;
   min-width: 14.4rem;
   min-height: 23.3rem;
 `;
@@ -212,6 +216,11 @@ function Single({ userId }) {
   const [dealerCardsCounter, setDealerCardsCounter] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [queue, setQueue] = useState([]);
+  const [prevPlayerScore, setPrevPlayerScore] = useState(0);
+  const [playerScore, setPlayerScore] = useState(0);
+  const [prevDealerScore, setPrevDealerScore] = useState(0);
+  const [dealerScore, setDealerScore] = useState(0);
+  const [dealerTotalScore, setDealerTotalScore] = useState(0);
 
   useEffect(() => {
     const date = new Date();
@@ -372,21 +381,35 @@ function Single({ userId }) {
   }, [balance, max]);
 
   useEffect(() => {
+    setTimeout(() => {
+      setPrevPlayerScore(playerScore);
+    }, 1000);
+  }, [playerScore]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setPrevDealerScore(dealerScore);
+    }, 1000);
+  }, [dealerScore]);
+
+  useEffect(() => {
     if (!isAnimating && queue.length) {
       setIsAnimating(true);
       const { destination, card, number } = queue.shift();
+      console.log(card);
+
       setQueue(queue);
       let handRef;
       if (destination === "player") {
         handRef = playerHandRef.current;
         setFlippedPlayer((prevFlipped) => [...prevFlipped, 1]);
-        console.log(playerHand);
         setPlayerHand((prevHand) => [...prevHand, card]);
       } else {
         handRef = dealerHandRef.current;
         setFlippedDealer((prevFlipped) => [...prevFlipped, 1]);
         setDealerHand((prevHand) => [...prevHand, card]);
       }
+
       setTimeout(() => {
         animateDeal(
           destination,
@@ -397,6 +420,19 @@ function Single({ userId }) {
           setIsAnimating
         );
       }, 10);
+
+      setTimeout(() => {
+        if (destination === "player")
+          setPlayerScore(getCardValue(card.value, playerScore));
+        else {
+          if (number === 1)
+            setDealerTotalScore(getCardValue(card.value, dealerTotalScore));
+          else {
+            setDealerScore(getCardValue(card.value, dealerScore));
+            setDealerTotalScore(getCardValue(card.value, dealerTotalScore));
+          }
+        }
+      }, 1000);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -455,6 +491,16 @@ function Single({ userId }) {
                 key={i.toString()}
               />
             ))}
+          {dealerScore !== 0 && (
+            <Score>
+              <CountUp
+                start={prevDealerScore}
+                end={dealerScore}
+                duration={1}
+                delay={0}
+              />
+            </Score>
+          )}
         </CardsPlaceholder>
         <CardsPlaceholder ref={playerHandRef}>
           {playerHand &&
@@ -467,6 +513,16 @@ function Single({ userId }) {
                 key={i.toString()}
               />
             ))}
+          {playerScore !== 0 && (
+            <Score>
+              <CountUp
+                start={prevPlayerScore}
+                end={playerScore}
+                duration={1}
+                delay={0}
+              />
+            </Score>
+          )}
         </CardsPlaceholder>
       </Table>
       <ButtonGroup>
