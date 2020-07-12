@@ -73,3 +73,65 @@ export const animateDeal = (
       setIsAnimating(false);
     });
 };
+
+export const slideInUp = (element) => {
+  const tl = gsap.timeline();
+
+  tl.fromTo(
+    element,
+    {
+      autoAlpha: 0,
+      y: 200,
+    },
+    { y: 0, autoAlpha: 1 }
+  );
+
+  return tl;
+};
+
+export const slideInRight = (element) => {
+  const tl = gsap.timeline();
+
+  tl.fromTo(
+    element,
+    {
+      x: "-=200px",
+    },
+    {
+      x: 0,
+    }
+  );
+
+  return tl;
+};
+
+export const slideOutDown = (element) => {
+  const tl = gsap.timeline();
+
+  tl.fromTo(
+    element,
+    {
+      autoAlpha: 1,
+      y: 0,
+    },
+    { y: 200, autoAlpha: 0 }
+  );
+
+  return tl;
+};
+
+export const slideOutLeft = (element) => {
+  const tl = gsap.timeline();
+
+  tl.fromTo(
+    element,
+    {
+      x: 0,
+    },
+    {
+      x: "-=200px",
+    }
+  );
+
+  return tl;
+};

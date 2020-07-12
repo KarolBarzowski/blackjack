@@ -1,4 +1,4 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 
 const Button = styled.button`
   border: none;
@@ -26,12 +26,6 @@ const Button = styled.button`
     cursor: default;
     opacity: 0.38 !important;
   }
-
-  ${({ hide }) =>
-    hide &&
-    css`
-      visibility: hidden;
-    `}
 `;
 
 export default Button;

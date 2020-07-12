@@ -14,7 +14,14 @@ import CountUp from "react-countup";
 import backgroundPattern from "assets/images/bg.png";
 import { ReactComponent as Text } from "assets/images/text.svg";
 import { createDeck, shuffleDeck, deal, getCardValue } from "helpers/functions";
-import { SlideIn, animateDeal } from "helpers/animations";
+import {
+  SlideIn,
+  animateDeal,
+  slideInUp,
+  slideInRight,
+  slideOutDown,
+  slideOutLeft,
+} from "helpers/animations";
 import ButtonIcon from "components/ButtonIcon";
 import Paragraph from "components/Paragraph";
 import Button from "components/Button";
@@ -24,6 +31,8 @@ import Card from "components/Card";
 import Reverse from "components/Reverse";
 import Deck from "components/Deck";
 import Score from "components/Score";
+
+import { dummyData } from "helpers/dummyData";
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -121,9 +130,19 @@ const TableText = styled.div`
 `;
 
 const ButtonGroup = styled.div`
+  position: relative;
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
+  justify-content: center;
+
+  ${({ absolute, left }) =>
+    absolute &&
+    css`
+      position: absolute;
+      top: 7.85rem;
+      left: ${left ? "10.6rem" : "47.6rem"};
+    `}
 `;
 
 const LeaveButton = styled(Link)`
@@ -175,12 +194,6 @@ const CardsPlaceholder = styled.div`
   min-height: 23.3rem;
 `;
 
-const Column = styled.div`
-  display: flex;
-  flex-flow: column nowrap;
-  height: 3.2rem;
-`;
-
 function Single({ userId }) {
   const valueRef = useRef(null);
   const minRef = useRef(null);
@@ -203,7 +216,7 @@ function Single({ userId }) {
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(300);
   const [isAllIn, setIsAllIn] = useState(false);
-  const [sliderValue, setSliderValue] = useState(min);
+  const [sliderValue, setSliderValue] = useState(276 || min);
   const [lastStake, setLastStake] = useState(null);
   const [currentAction, setCurrentAction] = useState("bet");
   const [logs, setLogs] = useState([]);
@@ -221,6 +234,11 @@ function Single({ userId }) {
   const [prevDealerScore, setPrevDealerScore] = useState(0);
   const [dealerScore, setDealerScore] = useState(0);
   const [dealerTotalScore, setDealerTotalScore] = useState(0);
+  const [canDouble, setCanDouble] = useState(false);
+  const [isSplit, setIsSplit] = useState(false);
+  const [canSplit, setCanSplit] = useState(false);
+  const [isBlackjack, setIsBlackjack] = useState(false);
+  const [winner, setWinner] = useState(null);
 
   useEffect(() => {
     const date = new Date();
@@ -251,40 +269,26 @@ function Single({ userId }) {
   }, [userId]);
 
   useEffect(() => {
+    if (winner) console.log(winner);
+  }, [winner]);
+
+  useEffect(() => {
     gsap.defaults({ duration: 0.75, ease: "power2.inOut" });
 
     switch (currentAction) {
       case "bet":
-        const slideInUp = (element) => {
-          const tl = gsap.timeline();
-
-          tl.fromTo(
-            element,
-            {
-              opacity: 0,
-              y: 200,
-            },
-            { y: 0, opacity: 1 }
-          );
-
-          return tl;
-        };
-
-        const slideInRight = (element) => {
-          const tl = gsap.timeline();
-
-          tl.fromTo(
-            element,
-            {
-              x: "-=200px",
-            },
-            {
-              x: 0,
-            }
-          );
-
-          return tl;
-        };
+        gsap.set(
+          [
+            hitRef.current,
+            standRef.current,
+            doubleDownRef.current,
+            splitRef.current,
+          ],
+          {
+            y: 200,
+            autoAlpha: 0,
+          }
+        );
 
         gsap
           .timeline()
@@ -297,37 +301,6 @@ function Single({ userId }) {
 
         break;
       case "decision":
-        const slideOutDown = (element) => {
-          const tl = gsap.timeline();
-
-          tl.fromTo(
-            element,
-            {
-              opacity: 1,
-              y: 0,
-            },
-            { y: 200, opacity: 0 }
-          );
-
-          return tl;
-        };
-
-        const slideOutLeft = (element) => {
-          const tl = gsap.timeline();
-
-          tl.fromTo(
-            element,
-            {
-              x: 0,
-            },
-            {
-              x: "-=200px",
-            }
-          );
-
-          return tl;
-        };
-
         gsap
           .timeline()
           .add(
@@ -340,30 +313,41 @@ function Single({ userId }) {
           .add(slideOutDown([maxRef.current, doubleRef.current]), 0.5)
           .add(slideOutDown([minRef.current, repeatRef.current]), 0.75)
           .add(slideOutDown(confirmRef.current), 1)
-          .add(slideOutLeft(leaveRef.current), 0.25);
+          .add(slideOutLeft(leaveRef.current), 0.25)
+          .call(
+            () =>
+              setQueue([
+                {
+                  destination: "player",
+                  card: deal(deck),
+                  number: 0,
+                },
+                {
+                  destination: "dealer",
+                  card: deal(deck),
+                  number: 0,
+                },
+                {
+                  destination: "player",
+                  card: deal(deck),
+                  number: 1,
+                },
+                {
+                  destination: "dealer",
+                  card: deal(deck),
+                  number: 1,
+                },
+              ]),
+            null,
+            "-=1"
+          );
 
-        setQueue([
-          {
-            destination: "player",
-            card: deal(deck),
-            number: 0,
-          },
-          {
-            destination: "dealer",
-            card: deal(deck),
-            number: 0,
-          },
-          {
-            destination: "player",
-            card: deal(deck),
-            number: 1,
-          },
-          {
-            destination: "dealer",
-            card: deal(deck),
-            number: 1,
-          },
-        ]);
+        gsap
+          .timeline()
+          .delay(4)
+          .add(slideInUp([doubleDownRef.current, standRef.current]))
+          .add(slideInUp([hitRef.current, splitRef.current]), 0.25);
+
         break;
       default:
         break;
@@ -375,18 +359,41 @@ function Single({ userId }) {
     if (balance <= max) setIsAllIn(true);
     else setIsAllIn(false);
 
+    if (balance - sliderValue >= 0) {
+      setCanDouble(true);
+      setCanSplit(true);
+    } else {
+      setCanDouble(false);
+      setCanSplit(false);
+    }
+
     setTimeout(() => {
       setPrevBalance(balance);
     }, 1750);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [balance, max]);
 
   useEffect(() => {
+    if (playerScore === 21) {
+      setIsBlackjack(true);
+      setWinner("player");
+    } else if (playerScore > 21) {
+      setWinner("dealer");
+    }
+
     setTimeout(() => {
       setPrevPlayerScore(playerScore);
     }, 1000);
   }, [playerScore]);
 
   useEffect(() => {
+    if (dealerScore === 21) {
+      setIsBlackjack(true);
+      setWinner("dealer");
+    } else if (dealerScore > 21) {
+      setWinner("player");
+    }
+
     setTimeout(() => {
       setPrevDealerScore(dealerScore);
     }, 1000);
@@ -395,10 +402,10 @@ function Single({ userId }) {
   useEffect(() => {
     if (!isAnimating && queue.length) {
       setIsAnimating(true);
-      const { destination, card, number } = queue.shift();
-      console.log(card);
 
+      const { destination, card, number } = queue.shift();
       setQueue(queue);
+
       let handRef;
       if (destination === "player") {
         handRef = playerHandRef.current;
@@ -420,23 +427,50 @@ function Single({ userId }) {
           setIsAnimating
         );
       }, 10);
-
-      setTimeout(() => {
-        if (destination === "player")
-          setPlayerScore(getCardValue(card.value, playerScore));
-        else {
-          if (number === 1)
-            setDealerTotalScore(getCardValue(card.value, dealerTotalScore));
-          else {
-            setDealerScore(getCardValue(card.value, dealerScore));
-            setDealerTotalScore(getCardValue(card.value, dealerTotalScore));
-          }
-        }
-      }, 1000);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queue, isAnimating]);
+
+  useEffect(() => {
+    let score = 0;
+    playerHand.forEach(({ value }) => {
+      score = getCardValue(value, score);
+    });
+
+    setTimeout(() => {
+      setPlayerScore(score);
+    }, 1000);
+
+    if (playerHand.length === 2) {
+      if (playerHand[0].value === "A" && playerHand[1].value === "A")
+        setIsSplit(true);
+      else if (
+        typeof playerHand[0].value === "string" &&
+        typeof playerHand[1].value === "string"
+      )
+        setIsSplit(true);
+      else if (playerHand[0].value === playerHand[1].value) setIsSplit(true);
+      else setIsSplit(false);
+    } else setIsSplit(false);
+  }, [playerHand]);
+
+  useEffect(() => {
+    let score = 0;
+    let totalScore = 0;
+
+    dealerHand.forEach(({ value }, i) => {
+      totalScore = getCardValue(value, score);
+      if (i !== 1) {
+        score = getCardValue(value, score);
+      }
+    });
+
+    setTimeout(() => {
+      setDealerScore(score);
+      setDealerTotalScore(totalScore);
+    }, 1000);
+  }, [dealerHand]);
 
   const handleFlipCard = (destination, number) => {
     if (destination === "player") {
@@ -526,15 +560,11 @@ function Single({ userId }) {
         </CardsPlaceholder>
       </Table>
       <ButtonGroup>
-        <Column>
+        <ButtonGroup>
           <Button type="button" ref={minRef} onClick={() => handleBet(min)}>
             Min. ${min}
           </Button>
-          <Button type="button" ref={hitRef} onClick={handleHit} hide>
-            HIT
-          </Button>
-        </Column>
-        <Column>
+
           <Button
             type="button"
             ref={maxRef}
@@ -542,10 +572,18 @@ function Single({ userId }) {
           >
             {isAllIn ? `All in` : `Max. $${max}`}
           </Button>
-          <Button type="button" ref={standRef} onClick={handleStand} hide>
+        </ButtonGroup>
+
+        <ButtonGroup absolute left>
+          <Button type="button" ref={hitRef} onClick={handleHit}>
+            HIT
+          </Button>
+
+          <Button type="button" ref={standRef} onClick={handleStand}>
             STAND
           </Button>
-        </Column>
+        </ButtonGroup>
+
         <SliderContainer>
           <Row ref={confirmRef}>
             <Button type="button" margin onClick={() => handleBet()}>
@@ -585,7 +623,8 @@ function Single({ userId }) {
             </ButtonIcon>
           </Row>
         </SliderContainer>
-        <Column>
+
+        <ButtonGroup>
           <Button
             type="button"
             ref={doubleRef}
@@ -594,16 +633,7 @@ function Single({ userId }) {
           >
             DOUBLE {lastStake && `$${lastStake * 2}`}
           </Button>
-          <Button
-            type="button"
-            ref={doubleDownRef}
-            onClick={handleDoubleDown}
-            hide
-          >
-            DOUBLE
-          </Button>
-        </Column>
-        <Column>
+
           <Button
             type="button"
             ref={repeatRef}
@@ -612,10 +642,27 @@ function Single({ userId }) {
           >
             REPEAT {lastStake && `$${lastStake}`}
           </Button>
-          <Button type="button" ref={splitRef} onClick={handleSplit} hide>
-            SPLIT
+        </ButtonGroup>
+
+        <ButtonGroup absolute right>
+          <Button
+            type="button"
+            ref={doubleDownRef}
+            onClick={handleDoubleDown}
+            disabled={!canDouble}
+          >
+            DOUBLE {canDouble && `$${sliderValue}`}
           </Button>
-        </Column>
+
+          <Button
+            type="button"
+            ref={splitRef}
+            onClick={handleSplit}
+            disabled={!canSplit || !isSplit}
+          >
+            SPLIT {canSplit && `$${sliderValue}`}
+          </Button>
+        </ButtonGroup>
       </ButtonGroup>
     </Wrapper>
   );

@@ -7,75 +7,36 @@ const Deck = styled.div`
   height: 23.3rem;
   width: 14.4rem;
   padding: 1rem;
-  box-shadow: 2.2rem -2.2rem 1rem 1rem rgba(0, 0, 0, 0.34),
-    -3rem 3rem 1rem rgba(0, 0, 0, 0.34);
+  box-shadow: 1.2rem -1.2rem 1rem 0.8rem rgba(0, 0, 0, 0.34),
+    -2.1rem 2.1rem 1rem rgba(0, 0, 0, 0.34);
   background-color: #ffffff;
   border-radius: 0 1rem 1rem 0;
 
   ::before {
     content: "";
     position: absolute;
-    top: 1.7rem;
-    left: -3.4rem;
+    top: 1.05rem;
+    left: -2.1rem;
     height: 100%;
-    width: 3.4rem;
+    width: 2.1rem;
     transform: rotate(0deg) skewY(-45deg);
-    background: linear-gradient(
-      90deg,
-      #ffffff 0%,
-      #000000 5%,
-      #ffffff 10%,
-      #000000 15%,
-      #ffffff 20%,
-      #000000 25%,
-      #ffffff 30%,
-      #000000 35%,
-      #ffffff 40%,
-      #000000 45%,
-      #ffffff 50%,
-      #000000 55%,
-      #ffffff 60%,
-      #000000 65%,
-      #ffffff 70%,
-      #000000 75%,
-      #ffffff 80%,
-      #000000 85%,
-      #ffffff 90%,
-      #000000 95%,
-      #ffffff 100%
-    );
+    background: white;
   }
 
   ::after {
     content: "";
     position: absolute;
-    bottom: -3.4rem;
-    left: -1.7rem;
-    height: 3.4rem;
+    bottom: -2.1rem;
+    left: -1.05rem;
+    height: 2.1rem;
     width: calc(100% - 0.8rem);
+    /* background-color: rgba(199, 199, 204); */
+    /* background-color: #b3b3b3; */
+    background: rgb(255, 255, 255);
     background: linear-gradient(
-      0deg,
-      #ffffff 0%,
-      #000000 5%,
-      #ffffff 10%,
-      #000000 15%,
-      #ffffff 20%,
-      #000000 25%,
-      #ffffff 30%,
-      #000000 35%,
-      #ffffff 40%,
-      #000000 45%,
-      #ffffff 50%,
-      #000000 55%,
-      #ffffff 60%,
-      #000000 65%,
-      #ffffff 70%,
-      #000000 75%,
-      #ffffff 80%,
-      #000000 85%,
-      #ffffff 90%,
-      #000000 95%,
-      #ffffff 100%
+      90deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(174, 174, 178, 1) 5%
     );
     transform: rotate(0deg) skewX(-45deg);
   }
