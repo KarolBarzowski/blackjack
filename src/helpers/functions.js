@@ -36,9 +36,7 @@ export const deal = (deck) => {
 };
 
 export const getCardValue = (value, score) => {
-  if (value === "A") {
-    score += score + 11 > 21 ? 1 : 11;
-  } else if (typeof value === "string") {
+  if (typeof value === "string") {
     score += 10;
   } else {
     score += value;

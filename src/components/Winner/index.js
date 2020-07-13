@@ -67,13 +67,15 @@ const Text = styled.h1`
   animation: ${SlideInOut} 3s ease-in-out forwards;
 `;
 
-const Winner = ({ winner, isBlackjack }) => (
+const Winner = ({ winner, isBlackjack, isDraw }) => (
   <Wrapper isWin={winner === "player"}>
     <Text>
       {winner === "player"
         ? isBlackjack
           ? "BLACKJACK! You win!"
           : "You win!"
+        : isDraw
+        ? "Draw!"
         : "You lose!"}
     </Text>
   </Wrapper>

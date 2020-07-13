@@ -245,6 +245,8 @@ function Single({ userId }) {
   const [isDraw, setIsDraw] = useState(false);
   const [winner, setWinner] = useState(null);
   const [isStand, setIsStand] = useState(false);
+  const [isEnd, setIsEnd] = useState(false);
+  const [isAce, setIsAce] = useState(false);
 
   useEffect(() => {
     const date = new Date();
@@ -481,7 +483,7 @@ function Single({ userId }) {
         break;
     }
 
-    if (isStand) {
+    if (isStand && isEnd) {
       if (playerScore > dealerScore && playerScore < 21) {
         setWinner("player");
       } else if (playerScore < dealerScore && dealerScore < 21) {
@@ -494,13 +496,37 @@ function Single({ userId }) {
     setTimeout(() => {
       setPrevPlayerScore(playerScore);
     }, 1000);
-  }, [playerScore, dealerScore, isStand]);
+  }, [playerScore, dealerScore, isStand, isEnd]);
 
   useEffect(() => {
+    if (isStand) {
+      if (dealerScore <= 16 && !isAnimating) {
+        setTimeout(() => {
+          setQueue((prevQueue) => [
+            ...prevQueue,
+            {
+              destination: "dealer",
+              card: deal(deck),
+              number: dealerCardsCounter + 1,
+            },
+          ]);
+
+          setDealerCardsCounter((prevCount) => prevCount + 1);
+
+          handleCountDealerScore();
+        }, 750);
+      }
+
+      if (dealerScore >= 17) {
+        setIsEnd(true);
+      }
+    }
+
     setTimeout(() => {
       setPrevDealerScore(dealerScore);
     }, 1000);
-  }, [dealerScore]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dealerCardsCounter, dealerScore, deck, isAnimating, isStand]);
 
   useEffect(() => {
     if (!isAnimating && queue.length) {
@@ -538,7 +564,13 @@ function Single({ userId }) {
   useEffect(() => {
     let score = 0;
     playerHand.forEach(({ value }) => {
-      score = getCardValue(value, score);
+      if (value === "A") {
+        score += score + 11 > 21 ? 1 : 11;
+      } else if (typeof value === "string") {
+        score += 10;
+      } else {
+        score += value;
+      }
     });
 
     setTimeout(() => {
@@ -564,7 +596,7 @@ function Single({ userId }) {
 
     dealerHand.forEach(({ value }, i) => {
       totalScore = getCardValue(value, score);
-      if (i !== 1) {
+      if (i !== 1 || isStand) {
         score = getCardValue(value, score);
       }
     });
@@ -573,7 +605,7 @@ function Single({ userId }) {
       setDealerScore(score);
       setDealerTotalScore(totalScore);
     }, 1000);
-  }, [dealerHand]);
+  }, [dealerHand, isStand]);
 
   const handleFlipCard = (destination, number) => {
     if (destination === "player") {
@@ -593,6 +625,16 @@ function Single({ userId }) {
     setBalance(balance - stake);
   };
 
+  const handleCountDealerScore = () => {
+    let score = 0;
+
+    dealerHand.forEach(({ value }, i) => {
+      score = getCardValue(value, score);
+    });
+
+    setDealerScore(score);
+  };
+
   const handleHit = () => {
     setQueue((prevQueue) => [
       ...prevQueue,
@@ -608,33 +650,9 @@ function Single({ userId }) {
   const handleStand = () => {
     setFlippedDealer([0, 0]);
 
-    let score = 0;
+    handleCountDealerScore();
 
-    dealerHand.forEach(({ value }, i) => {
-      score = getCardValue(value, score);
-    });
-
-    setDealerScore(score);
-
-    while (score <= 16) {
-      const card = deal(deck);
-
-      setQueue((prevQueue) => [
-        ...prevQueue,
-        {
-          destination: "dealer",
-          card,
-          number: dealerCardsCounter + 1,
-        },
-      ]);
-
-      score = getCardValue(card.value, score);
-      console.log("score:", score);
-    }
-
-    if (score >= 17) {
-      setIsStand(true);
-    }
+    setIsStand(true);
   };
 
   const handleDoubleDown = () => {};
@@ -643,7 +661,9 @@ function Single({ userId }) {
 
   return (
     <Wrapper>
-      {winner && <Winner winner={winner} isBlackjack={isBlackjack} />}
+      {winner && (
+        <Winner winner={winner} isBlackjack={isBlackjack} draw={isDraw} />
+      )}
       <LeaveButton to="/" ref={leaveRef}>
         <Icon icon={faArrowLeft} />
         <StyledParagraph>Leave table</StyledParagraph>
@@ -672,7 +692,7 @@ function Single({ userId }) {
             <Score isWin={winner === "dealer"} isLose={winner === "player"}>
               <CountUp
                 start={prevDealerScore}
-                end={winner || isStand ? dealerTotalScore : dealerScore}
+                end={dealerScore}
                 duration={1}
                 delay={0}
               />
