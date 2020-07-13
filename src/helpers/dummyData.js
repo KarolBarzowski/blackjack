@@ -4,7 +4,7 @@ export const dummyData = [
     number: 0,
     card: {
       suit: "♠︎",
-      value: 10,
+      value: "J",
       color: "black",
     },
   },
@@ -13,7 +13,7 @@ export const dummyData = [
     number: 0,
     card: {
       suit: "♠",
-      value: 10,
+      value: 6,
       color: "red",
     },
   },
@@ -22,7 +22,7 @@ export const dummyData = [
     number: 1,
     card: {
       suit: "♠︎",
-      value: "A",
+      value: "Q",
       color: "red",
     },
   },

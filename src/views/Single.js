@@ -220,9 +220,9 @@ function Single({ userId }) {
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(300);
   const [isAllIn, setIsAllIn] = useState(false);
-  const [sliderValue, setSliderValue] = useState(276 || min);
+  const [sliderValue, setSliderValue] = useState(20 || min);
   const [lastStake, setLastStake] = useState(null);
-  const [currentAction, setCurrentAction] = useState("decision");
+  const [currentAction, setCurrentAction] = useState("bet");
   const [logs, setLogs] = useState([]);
   const [deck, setDeck] = useState(shuffleDeck(createDeck()));
   const [playerHand, setPlayerHand] = useState([]);
@@ -345,6 +345,7 @@ function Single({ userId }) {
           .call(
             () => {
               setIsAnimating(false);
+              // setQueue(dummyData);
               setQueue([
                 {
                   destination: "player",
@@ -385,10 +386,10 @@ function Single({ userId }) {
         const balanceRect = balanceRef.current.getBoundingClientRect();
         const stakeRect = stakeRef.current.getBoundingClientRect();
 
+        if (!isStand) handleHideButtons();
+
         gsap
           .timeline()
-          .add(slideOutDown([hitRef.current, splitRef.current]))
-          .add(slideOutDown([doubleDownRef.current, standRef.current]), 0.25)
           .fromTo(
             stakeRef.current,
             { x: 0, y: 0 },
@@ -440,7 +441,9 @@ function Single({ userId }) {
                   .join(" ")}`
               : `You ${winner === "player" ? "won" : "lost"} $${
                   isBlackjack ? sliderValue * 1.5 : sliderValue
-                } with ${playerScore}: ${playerHand
+                } with ${
+                  isAcePlayer ? playerTotalScore : playerScore
+                }: ${playerHand
                   .map(({ value, suit }) => `${value}${suit}`)
                   .join(" ")}`,
           },
@@ -467,7 +470,6 @@ function Single({ userId }) {
   useEffect(() => {
     if (!isAnimating && !queue.length) {
       let whoWin = handleIsWinner();
-      console.log(whoWin);
 
       if (whoWin) {
         let newArray = [];
@@ -501,16 +503,13 @@ function Single({ userId }) {
     playerTotalScore,
     dealerScore,
     dealerTotalScore,
-    isStand,
-    isEnd,
     isAnimating,
-    queue,
-    flippedDealer,
+    isEnd,
   ]);
 
   useEffect(() => {
     if (isStand) {
-      if (dealerScore <= 16 && !isAnimating) {
+      if (dealerScore <= 16 && dealerTotalScore <= 16 && !isAnimating) {
         setTimeout(() => {
           setQueue((prevQueue) => [
             ...prevQueue,
@@ -524,10 +523,10 @@ function Single({ userId }) {
           setDealerCardsCounter((prevCount) => prevCount + 1);
 
           handleCountDealerScore();
-        }, 750);
+        }, 500);
       }
 
-      if (dealerScore >= 17) {
+      if (dealerScore >= 17 || dealerTotalScore >= 17) {
         setIsEnd(true);
       }
     }
@@ -601,8 +600,6 @@ function Single({ userId }) {
       totalScore += 11;
     });
 
-    console.log(`${score} / ${totalScore} ${aces.length && totalScore <= 21}`);
-
     setTimeout(() => {
       setIsAcePlayer(aces.length && totalScore <= 21);
       setPlayerScore(score);
@@ -645,10 +642,6 @@ function Single({ userId }) {
       score += 1;
       totalScore += 11;
     });
-
-    console.log(
-      `Dealer: ${score} / ${totalScore} ${aces.length && totalScore <= 21}`
-    );
 
     setTimeout(() => {
       setIsAceDealer(aces.length && totalScore <= 21);
@@ -727,18 +720,45 @@ function Single({ userId }) {
     }
 
     if (isStand && isEnd) {
-      if (playerScore > dealerScore && playerScore < 21) {
-        whoWin = "player";
-      } else if (playerScore < dealerScore && dealerScore < 21) {
-        whoWin = "dealer";
-      } else if (playerScore === dealerScore) {
-        setTimeout(() => {
-          setIsDraw(true);
-        }, 500);
+      switch (true) {
+        case playerScore > dealerScore && playerScore < 21 && !isAceDealer:
+        case playerScore > dealerTotalScore && playerScore < 21:
+        case playerTotalScore > dealerScore &&
+          playerTotalScore < 21 &&
+          !isAceDealer:
+        case playerTotalScore > dealerTotalScore && playerTotalScore < 21:
+          whoWin = "player";
+          break;
+        case dealerScore > playerScore && dealerScore < 21 && !isAcePlayer:
+        case dealerScore > playerTotalScore && dealerScore < 21:
+        case dealerTotalScore > playerScore &&
+          dealerTotalScore < 21 &&
+          !isAcePlayer:
+        case dealerTotalScore > playerTotalScore && dealerTotalScore < 21:
+          whoWin = "dealer";
+          break;
+        case playerScore === dealerScore &&
+          playerTotalScore < 21 &&
+          dealerTotalScore < 21:
+          whoWin = null;
+          setTimeout(() => {
+            setIsDraw(true);
+          }, 500);
+          break;
+
+        default:
+          break;
       }
     }
 
     return whoWin;
+  };
+
+  const handleHideButtons = () => {
+    gsap
+      .timeline()
+      .add(slideOutDown([doubleDownRef.current, standRef.current]))
+      .add(slideOutDown([hitRef.current, splitRef.current]), 0.25);
   };
 
   const handleHit = () => {
@@ -754,6 +774,8 @@ function Single({ userId }) {
   };
 
   const handleStand = () => {
+    handleHideButtons();
+
     setFlippedDealer([0, 0]);
 
     handleCountDealerScore();
@@ -761,7 +783,20 @@ function Single({ userId }) {
     setIsStand(true);
   };
 
-  const handleDoubleDown = () => {};
+  const handleDoubleDown = () => {
+    handleHideButtons();
+    setSliderValue((prevValue) => prevValue * 2);
+    setBalance(balance - sliderValue);
+    handleHit();
+    
+    setTimeout(() => {
+      setFlippedDealer([0, 0]);
+
+      handleCountDealerScore();
+
+      setIsStand(true);
+    }, 750);
+  };
 
   const handleSplit = () => {};
 
