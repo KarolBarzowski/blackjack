@@ -1,5 +1,5 @@
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 
 const Appear = keyframes`
     from {
@@ -57,6 +57,12 @@ const Wrapper = styled.div`
   animation: ${Appear} 0.3s ease-in-out 0.3s forwards,
     ${Disappear} 0.3s ease-in-out 2.8s forwards;
   overflow: hidden;
+
+  ${({ isDraw }) =>
+    isDraw &&
+    css`
+      background-color: rgba(0, 0, 0, 0.6);
+    `}
 `;
 
 const Text = styled.h1`
@@ -68,11 +74,13 @@ const Text = styled.h1`
 `;
 
 const Winner = ({ winner, isBlackjack, isDraw }) => (
-  <Wrapper isWin={winner === "player"}>
+  <Wrapper isWin={winner === "player"} isDraw={isDraw}>
     <Text>
       {winner === "player"
         ? isBlackjack
-          ? "BLACKJACK! You win!"
+          ? isDraw
+            ? "Draw!"
+            : "BLACKJACK! You win!"
           : "You win!"
         : isDraw
         ? "Draw!"

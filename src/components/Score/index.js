@@ -24,6 +24,7 @@ const Score = styled.p`
   min-width: 5.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   animation: ${Appear} 0.15s ease-in-out forwards;
+  transition: background-color 0.15s ease-in-out;
 
   ::before {
     content: "";
@@ -36,6 +37,7 @@ const Score = styled.p`
     border-left: 0.65rem solid transparent;
     border-right: 0.65rem solid transparent;
     border-bottom: 0.8rem solid rgba(0, 0, 0, 0.21);
+    transition: border-bottom-color 0.15s ease-in-out;
   }
 
   ${({ isWin }) =>
@@ -57,6 +59,16 @@ const Score = styled.p`
         border-bottom-color: ${({ theme }) => theme.red};
       }
     `}
+
+    ${({ isDraw }) =>
+      isDraw &&
+      css`
+        background-color: rgba(0, 0, 0, 0.21);
+
+        ::before {
+          border-bottom-color: rgba(0, 0, 0, 0.21);
+        }
+      `}
 `;
 
 export default Score;
