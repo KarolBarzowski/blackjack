@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 const Deck = styled.div`
   position: absolute;
-  top: 25vh;
+  top: 15vh;
   right: 4%;
   height: 23.3rem;
   width: 14.4rem;

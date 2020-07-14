@@ -49,10 +49,10 @@ const Welcome = () => (
     <Heading>Choose game mode</Heading>
     <Row>
       <Tile to="play">
-        <Paragraph>One Player</Paragraph>
+        <Paragraph>Play alone</Paragraph>
       </Tile>
       <Tile to="tables">
-        <Paragraph>With other players</Paragraph>
+        <Paragraph>Play with other players</Paragraph>
       </Tile>
     </Row>
   </Wrapper>

@@ -21,6 +21,8 @@ import {
   slideInRight,
   slideOutDown,
   slideOutLeft,
+  moveLeft,
+  moveRight,
 } from "helpers/animations";
 import ButtonIcon from "components/ButtonIcon";
 import Paragraph from "components/Paragraph";
@@ -144,6 +146,7 @@ const ButtonGroup = styled.div`
       position: absolute;
       top: 7.85rem;
       left: ${left ? "10.6rem" : "47.6rem"};
+      z-index: 4;
     `}
 `;
 
@@ -196,6 +199,18 @@ const CardsPlaceholder = styled.div`
   min-height: 23.3rem;
 `;
 
+const SplittedCardsPlaceholder = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: ${({ left }) => (left ? "-25.5rem" : "25.5rem")};
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 14.4rem;
+  min-height: 23.3rem;
+`;
+
 function Single({ userId }) {
   const valueRef = useRef(null);
   const minRef = useRef(null);
@@ -214,6 +229,11 @@ function Single({ userId }) {
   const splitRef = useRef(null);
   const balanceRef = useRef(null);
   const stakeRef = useRef(null);
+  const scoreLeftRef = useRef(null);
+  const scoreRightRef = useRef(null);
+  const smallBtnsRef = useRef(null);
+  const splittedLeftHandRef = useRef(null);
+  const splittedRightHandRef = useRef(null);
 
   const [balance, setBalance] = useState(0);
   const [prevBalance, setPrevBalance] = useState(0);
@@ -243,14 +263,31 @@ function Single({ userId }) {
   const [dealerTotalScore, setDealerTotalScore] = useState(0);
   const [canDouble, setCanDouble] = useState(false);
   const [isSplit, setIsSplit] = useState(false);
+  const [isSplitted, setIsSplitted] = useState(false);
   const [canSplit, setCanSplit] = useState(false);
   const [isBlackjack, setIsBlackjack] = useState(false);
   const [isDraw, setIsDraw] = useState(false);
   const [winner, setWinner] = useState(null);
+  const [winnerSplitted, setWinnerSplitted] = useState([null, null]);
   const [isStand, setIsStand] = useState(false);
   const [isEnd, setIsEnd] = useState(false);
   const [isAcePlayer, setIsAcePlayer] = useState(false);
   const [isAceDealer, setIsAceDealer] = useState(false);
+  const [splittedDraw, setSplittedDraw] = useState([false, false]);
+  const [splittedScore, setSplittedScore] = useState([0, 0]);
+  const [prevSplittedScore, setPrevSplittedScore] = useState([0, 0]);
+  const [splittedTotalScore, setSplittedTotalScore] = useState([0, 0]);
+  const [prevSplittedTotalScore, setPrevSplittedTotalScore] = useState([0, 0]);
+  const [currentSide, setCurrentSide] = useState(1);
+  const [splittedHands, setSplittedHands] = useState([[], []]);
+  const [flippedSplitted, setFlippedSplitted] = useState([[0], [0]]);
+  const [isSplittedAce, setIsSplittedAce] = useState([false, false]);
+  const [splittedCardsCounter, setSplittedCardsCounter] = useState([0, 0]);
+  const [isSplittedBlackjack, setIsSplittedBlackjack] = useState([
+    false,
+    false,
+  ]);
+  const [isSplittedStand, setIsSplittedStand] = useState([false, false]);
 
   useEffect(() => {
     const date = new Date();
@@ -301,9 +338,11 @@ function Single({ userId }) {
             standRef.current,
             doubleDownRef.current,
             splitRef.current,
+            scoreLeftRef.current,
+            scoreRightRef.current,
+            smallBtnsRef.current,
           ],
           {
-            y: 200,
             autoAlpha: 0,
           }
         );
@@ -345,29 +384,29 @@ function Single({ userId }) {
           .call(
             () => {
               setIsAnimating(false);
-              // setQueue(dummyData);
-              setQueue([
-                {
-                  destination: "player",
-                  card: deal(deck),
-                  number: 0,
-                },
-                {
-                  destination: "dealer",
-                  card: deal(deck),
-                  number: 0,
-                },
-                {
-                  destination: "player",
-                  card: deal(deck),
-                  number: 1,
-                },
-                {
-                  destination: "dealer",
-                  card: deal(deck),
-                  number: 1,
-                },
-              ]);
+              setQueue(dummyData);
+              // setQueue([
+              //   {
+              //     destination: "player",
+              //     card: deal(deck),
+              //     number: 0,
+              //   },
+              //   {
+              //     destination: "dealer",
+              //     card: deal(deck),
+              //     number: 0,
+              //   },
+              //   {
+              //     destination: "player",
+              //     card: deal(deck),
+              //     number: 1,
+              //   },
+              //   {
+              //     destination: "dealer",
+              //     card: deal(deck),
+              //     number: 1,
+              //   },
+              // ]);
             },
             null,
             "-=1"
@@ -450,6 +489,23 @@ function Single({ userId }) {
         ]);
 
         break;
+      case "split":
+        setIsSplitted(true);
+
+        gsap
+          .timeline()
+          .set([scoreLeftRef.current, scoreRightRef.current], {
+            autoAlpha: 1,
+          })
+          .set(smallBtnsRef.current, { x: 55, y: -40 })
+          .to(smallBtnsRef.current, { autoAlpha: 1, duration: 0.75 })
+          .add(moveLeft(playerHandRef.current.children[0]), 0)
+          .add(moveLeft(scoreLeftRef.current), 0)
+          .add(moveRight(playerHandRef.current.children[1]), 0)
+          .add(moveRight(scoreRightRef.current), 0);
+
+        break;
+
       default:
         break;
     }
@@ -458,14 +514,19 @@ function Single({ userId }) {
 
   useEffect(() => {
     setIsAllIn(balance <= max);
-    setCanDouble(balance - sliderValue >= 0);
     setCanSplit(balance - sliderValue >= 0);
+
+    if (isSplitted) {
+      setCanDouble(balance - sliderValue / 2 >= 0);
+    } else {
+      setCanDouble(balance - sliderValue >= 0);
+    }
 
     setTimeout(() => {
       setPrevBalance(balance);
     }, 1750);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [balance, max]);
+  }, [balance, max, isSplitted]);
 
   useEffect(() => {
     if (!isAnimating && !queue.length) {
@@ -481,7 +542,6 @@ function Single({ userId }) {
         handleCountDealerScore();
 
         setTimeout(() => {
-          // whoWin = handleIsWinner();
           if (dealerTotalScore === 21 && playerTotalScore === 21) {
             whoWin = null;
             setIsDraw(true);
@@ -650,6 +710,216 @@ function Single({ userId }) {
     }, 1000);
   }, [dealerHand, isStand]);
 
+  useEffect(() => {
+    let whoWin = winnerSplitted;
+
+    switch (true) {
+      case splittedScore[currentSide] > 21:
+      case dealerScore === 21:
+      case dealerTotalScore === 21:
+        whoWin[currentSide] = "dealer";
+        break;
+      case dealerScore > 21:
+        whoWin[currentSide] = "player";
+        break;
+      case splittedScore[currentSide] === 21 && dealerScore < 21:
+      case splittedScore[currentSide] === 21 && dealerTotalScore < 21:
+      case splittedTotalScore[currentSide] === 21 && dealerScore < 21:
+      case splittedTotalScore[currentSide] === 21 && dealerTotalScore < 21:
+        whoWin[currentSide] = "player";
+        const newArray = isSplittedBlackjack;
+        newArray[currentSide] = true;
+        setIsSplittedBlackjack(newArray);
+        break;
+
+      default:
+        break;
+    }
+
+    if (isSplittedStand[0] && isSplittedStand[1]) {
+      if (isSplittedStand[0]) {
+        switch (true) {
+          case splittedScore[0] > dealerScore &&
+            splittedScore[0] < 21 &&
+            !isAceDealer:
+          case splittedScore[0] > dealerTotalScore && splittedScore[0] < 21:
+          case splittedTotalScore[0] > dealerScore &&
+            splittedTotalScore[0] < 21 &&
+            !isAceDealer:
+          case splittedTotalScore[0] > dealerTotalScore &&
+            splittedTotalScore[0] < 21:
+            whoWin[0] = "player";
+            break;
+          case dealerScore > splittedScore[0] &&
+            dealerScore < 21 &&
+            !isAcePlayer:
+          case dealerScore > splittedTotalScore[0] && dealerScore < 21:
+          case dealerTotalScore > splittedScore[0] &&
+            dealerTotalScore < 21 &&
+            !isAcePlayer:
+          case dealerTotalScore > splittedTotalScore[0] &&
+            dealerTotalScore < 21:
+            whoWin[0] = "dealer";
+            break;
+          case splittedScore[0] === dealerScore &&
+            splittedTotalScore[0] < 21 &&
+            dealerTotalScore < 21:
+            whoWin[0] = null;
+            setTimeout(() => {
+              const newArray = splittedDraw;
+              splittedDraw[0] = true;
+              setSplittedDraw(newArray);
+            }, 500);
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      if (isSplittedStand[1]) {
+        switch (true) {
+          case splittedScore[1] > dealerScore &&
+            splittedScore[1] < 21 &&
+            !isAceDealer:
+          case splittedScore[1] > dealerTotalScore && splittedScore[1] < 21:
+          case splittedTotalScore[1] > dealerScore &&
+            splittedTotalScore[1] < 21 &&
+            !isAceDealer:
+          case splittedTotalScore[1] > dealerTotalScore &&
+            splittedTotalScore[1] < 21:
+            whoWin[1] = "player";
+            break;
+          case dealerScore > splittedScore[1] &&
+            dealerScore < 21 &&
+            !isAcePlayer:
+          case dealerScore > splittedTotalScore[1] && dealerScore < 21:
+          case dealerTotalScore > splittedScore[1] &&
+            dealerTotalScore < 21 &&
+            !isAcePlayer:
+          case dealerTotalScore > splittedTotalScore[1] &&
+            dealerTotalScore < 21:
+            whoWin[1] = "dealer";
+            break;
+          case splittedScore[1] === dealerScore &&
+            splittedTotalScore[1] < 21 &&
+            dealerTotalScore < 21:
+            whoWin[1] = null;
+            setTimeout(() => {
+              const newArray = splittedDraw;
+              splittedDraw[1] = true;
+              setSplittedDraw(newArray);
+            }, 500);
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+
+    setTimeout(() => {
+      setWinnerSplitted(whoWin);
+    }, 500);
+
+    setTimeout(() => {
+      setPrevSplittedScore(splittedScore);
+      setPrevSplittedTotalScore(splittedTotalScore);
+    }, 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    winnerSplitted,
+    currentSide,
+    splittedScore,
+    splittedTotalScore,
+    isSplittedStand,
+  ]);
+
+  useEffect(() => {
+    let score = [0, 0];
+    let totalScore = [0, 0];
+    let aces = [[], []];
+
+    splittedHands.forEach((hand, side) => {
+      hand.forEach(({ value }) => {
+        if (value === "A") {
+          aces[side].push(value);
+        } else if (typeof value === "string") {
+          score[side] += 10;
+          totalScore[side] += 10;
+        } else {
+          score[side] += value;
+          totalScore[side] += value;
+        }
+      });
+    });
+
+    aces.forEach((hand, side) => {
+      hand.forEach(() => {
+        score[side] += 1;
+        totalScore[side] += 11;
+      });
+    });
+    setTimeout(() => {
+      setIsSplittedAce([
+        aces[0].length && totalScore[0] <= 21,
+        aces[1].length && totalScore[1] <= 21,
+      ]);
+      setSplittedScore(score);
+      setSplittedTotalScore(totalScore);
+    }, 500);
+  }, [splittedHands]);
+
+  useEffect(() => {
+    console.log("winner:", winnerSplitted);
+
+    setTimeout(() => {
+      if (winnerSplitted[0] || winnerSplitted[1]) {
+        setIsAnimating(true);
+
+        const balanceRect = balanceRef.current.getBoundingClientRect();
+        const stakeRect = stakeRef.current.getBoundingClientRect();
+
+        if (currentSide || winnerSplitted[1]) {
+          // setCurrentSide(0);
+          gsap.timeline().to(smallBtnsRef.current, {
+            x: -465,
+          });
+        } else if (!currentSide && winnerSplitted[0]) {
+          gsap.timeline().to(smallBtnsRef.current, {
+            y: 200,
+            autoAlpha: 0,
+          });
+        }
+
+        if (winnerSplitted[currentSide] === "player") {
+          setBalance(
+            (prevBalance) =>
+              prevBalance +
+              (parseFloat(sliderValue) / 2) *
+                (isSplittedBlackjack[currentSide] ? 1.5 : 1)
+          );
+        } else if (splittedDraw[currentSide]) {
+          setBalance(
+            (prevBalance) => prevBalance + parseFloat(sliderValue) / 2
+          );
+        }
+        setCurrentSide(0);
+        setIsAnimating(false);
+      }
+    }, 501);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSide, winnerSplitted[0], winnerSplitted[1], splittedScore]);
+
+  useEffect(() => {
+    if (isSplittedStand[0] && isSplittedStand[1]) {
+      setFlippedDealer([0, 0]);
+      handleCountDealerScore();
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSplittedStand[0], isSplittedStand[1]]);
+
   const handleFlipCard = (destination, number) => {
     if (destination === "player") {
       const newArray = flippedPlayer;
@@ -696,91 +966,187 @@ function Single({ userId }) {
   };
 
   const handleIsWinner = () => {
-    let whoWin = null;
+    if (!isSplitted) {
+      let whoWin = null;
 
-    switch (true) {
-      case playerScore > 21:
-      case dealerScore === 21:
-      case dealerTotalScore === 21:
-        whoWin = "dealer";
-        break;
-      case dealerScore > 21:
-        whoWin = "player";
-        break;
-      case playerScore === 21 && dealerScore < 21:
-      case playerScore === 21 && dealerTotalScore < 21:
-      case playerTotalScore === 21 && dealerScore < 21:
-      case playerTotalScore === 21 && dealerTotalScore < 21:
-        whoWin = "player";
-        setIsBlackjack(true);
-        break;
-
-      default:
-        break;
-    }
-
-    if (isStand && isEnd) {
       switch (true) {
-        case playerScore > dealerScore && playerScore < 21 && !isAceDealer:
-        case playerScore > dealerTotalScore && playerScore < 21:
-        case playerTotalScore > dealerScore &&
-          playerTotalScore < 21 &&
-          !isAceDealer:
-        case playerTotalScore > dealerTotalScore && playerTotalScore < 21:
-          whoWin = "player";
-          break;
-        case dealerScore > playerScore && dealerScore < 21 && !isAcePlayer:
-        case dealerScore > playerTotalScore && dealerScore < 21:
-        case dealerTotalScore > playerScore &&
-          dealerTotalScore < 21 &&
-          !isAcePlayer:
-        case dealerTotalScore > playerTotalScore && dealerTotalScore < 21:
+        case playerScore > 21:
+        case dealerScore === 21:
+        case dealerTotalScore === 21:
           whoWin = "dealer";
           break;
-        case playerScore === dealerScore &&
-          playerTotalScore < 21 &&
-          dealerTotalScore < 21:
-          whoWin = null;
-          setTimeout(() => {
-            setIsDraw(true);
-          }, 500);
+        case dealerScore > 21:
+          whoWin = "player";
+          break;
+        case playerScore === 21 && dealerScore < 21:
+        case playerScore === 21 && dealerTotalScore < 21:
+        case playerTotalScore === 21 && dealerScore < 21:
+        case playerTotalScore === 21 && dealerTotalScore < 21:
+          whoWin = "player";
+          setIsBlackjack(true);
           break;
 
         default:
           break;
       }
-    }
 
-    return whoWin;
+      if (isStand && isEnd) {
+        switch (true) {
+          case playerScore > dealerScore && playerScore < 21 && !isAceDealer:
+          case playerScore > dealerTotalScore && playerScore < 21:
+          case playerTotalScore > dealerScore &&
+            playerTotalScore < 21 &&
+            !isAceDealer:
+          case playerTotalScore > dealerTotalScore && playerTotalScore < 21:
+            whoWin = "player";
+            break;
+          case dealerScore > playerScore && dealerScore < 21 && !isAcePlayer:
+          case dealerScore > playerTotalScore && dealerScore < 21:
+          case dealerTotalScore > playerScore &&
+            dealerTotalScore < 21 &&
+            !isAcePlayer:
+          case dealerTotalScore > playerTotalScore && dealerTotalScore < 21:
+            whoWin = "dealer";
+            break;
+          case playerScore === dealerScore &&
+            playerTotalScore < 21 &&
+            dealerTotalScore < 21:
+            whoWin = null;
+            setTimeout(() => {
+              setIsDraw(true);
+            }, 500);
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      return whoWin;
+    }
   };
 
   const handleHideButtons = () => {
     gsap
       .timeline()
-      .add(slideOutDown([doubleDownRef.current, standRef.current]))
-      .add(slideOutDown([hitRef.current, splitRef.current]), 0.25);
+      .add(slideOutDown([hitRef.current, splitRef.current]))
+      .add(slideOutDown([doubleDownRef.current, standRef.current]), 0.25);
   };
 
   const handleHit = () => {
-    setQueue((prevQueue) => [
-      ...prevQueue,
-      {
-        destination: "player",
-        card: deal(deck),
-        number: playerCardsCounter + 1,
-      },
-    ]);
-    setPlayerCardsCounter((prevCount) => prevCount + 1);
+    if (isSplitted) {
+      setIsAnimating(true);
+
+      // const card = deal(deck);
+      const card = {
+        suit: "♠︎",
+        value: "A",
+        color: "black",
+      };
+
+      if (currentSide) {
+        setFlippedSplitted((prevFlipped) => [
+          [...prevFlipped[0]],
+          [...prevFlipped[1], 1],
+        ]);
+        setSplittedHands((prevHand) => [
+          [...prevHand[0]],
+          [...prevHand[1], card],
+        ]);
+      } else {
+        setFlippedSplitted((prevFlipped) => [
+          [...prevFlipped[0], 1],
+          [...prevFlipped[1]],
+        ]);
+        setSplittedHands((prevHand) => [
+          [...prevHand[0], card],
+          [...prevHand[1]],
+        ]);
+      }
+
+      setTimeout(() => {
+        gsap.defaults({ ease: "power3.inOut" });
+
+        const deckPos = deckRef.current.getBoundingClientRect();
+
+        let element, handPos;
+        if (currentSide) {
+          handPos = splittedRightHandRef.current.getBoundingClientRect();
+          element = splittedRightHandRef.current;
+        } else {
+          handPos = splittedLeftHandRef.current.getBoundingClientRect();
+          element = splittedLeftHandRef.current;
+        }
+
+        gsap
+          .timeline()
+          .fromTo(
+            element.children[splittedCardsCounter[currentSide]],
+            {
+              x: deckPos.right - handPos.right,
+              y: deckPos.top - handPos.top,
+              visibility: "visible",
+            },
+            {
+              x: 55 * (splittedCardsCounter[currentSide] + 1),
+              y: 0,
+              rotate: Math.random() < 0.5 ? 3 : -3,
+              duration: 1.25,
+            },
+            -0.1
+          )
+          .call(
+            () => {
+              const newArray = flippedSplitted;
+              newArray[currentSide][splittedCardsCounter[currentSide] + 1] = 0;
+              setFlippedSplitted(newArray);
+            },
+            null,
+            0.5
+          )
+          .call(() => {
+            const newSplittedCardsCounter = splittedCardsCounter;
+            newSplittedCardsCounter[currentSide] += 1;
+            setSplittedCardsCounter(newSplittedCardsCounter);
+            setIsAnimating(false);
+          });
+      }, 10);
+    } else {
+      setQueue((prevQueue) => [
+        ...prevQueue,
+        {
+          destination: "player",
+          card: deal(deck),
+          number: playerCardsCounter + 1,
+        },
+      ]);
+      setPlayerCardsCounter((prevCount) => prevCount + 1);
+    }
   };
 
   const handleStand = () => {
-    handleHideButtons();
+    if (isSplitted) {
+      if (currentSide) {
+        setIsSplittedStand([false, true]);
+        setCurrentSide(0);
+        gsap.timeline().to(smallBtnsRef.current, {
+          x: -465,
+        });
+      } else {
+        if (isSplittedStand[1]) setIsSplittedStand([true, true]);
+        else setIsSplittedStand([true, false]);
 
-    setFlippedDealer([0, 0]);
-
-    handleCountDealerScore();
-
-    setIsStand(true);
+        gsap.timeline().to(smallBtnsRef.current, {
+          y: 200,
+          autoAlpha: 0,
+        });
+      }
+    } else {
+      handleHideButtons();
+      setFlippedDealer([0, 0]);
+      handleCountDealerScore();
+      setIsStand(true);
+    }
   };
 
   const handleDoubleDown = () => {
@@ -788,17 +1154,22 @@ function Single({ userId }) {
     setSliderValue((prevValue) => prevValue * 2);
     setBalance(balance - sliderValue);
     handleHit();
-    
+
     setTimeout(() => {
       setFlippedDealer([0, 0]);
-
       handleCountDealerScore();
-
       setIsStand(true);
     }, 750);
   };
 
-  const handleSplit = () => {};
+  const handleSplit = () => {
+    handleHideButtons();
+    setSliderValue((prevValue) => prevValue * 2);
+    setBalance(balance - sliderValue);
+    const [cardLeft, cardRight] = playerHand;
+    setSplittedHands([[cardLeft], [cardRight]]);
+    setCurrentAction("split");
+  };
 
   return (
     <Wrapper>
@@ -867,11 +1238,92 @@ function Single({ userId }) {
                 key={i.toString()}
               />
             ))}
+          <SplittedCardsPlaceholder ref={splittedLeftHandRef} left>
+            {splittedHands[0] &&
+              splittedHands[0].map(({ value, suit, color }, i) =>
+                i !== 0 ? (
+                  <Card
+                    value={value}
+                    suit={suit}
+                    color={color}
+                    isFlipped={flippedSplitted[0][i]}
+                    key={i.toString()}
+                  />
+                ) : null
+              )}
+          </SplittedCardsPlaceholder>
+          <SplittedCardsPlaceholder ref={splittedRightHandRef}>
+            {splittedHands[1] &&
+              splittedHands[1].map(({ value, suit, color }, i) =>
+                i !== 0 ? (
+                  <Card
+                    value={value}
+                    suit={suit}
+                    color={color}
+                    isFlipped={flippedSplitted[1][i]}
+                    key={i.toString()}
+                  />
+                ) : null
+              )}
+          </SplittedCardsPlaceholder>
+          <Score
+            ref={scoreLeftRef}
+            isWin={winnerSplitted[0] === "player"}
+            isLose={winnerSplitted[0] === "dealer"}
+            isDraw={splittedDraw[0]}
+            isStand={isSplittedStand[0]}
+          >
+            <CountUp
+              start={prevSplittedScore[0]}
+              end={splittedScore[0]}
+              duration={1}
+              delay={0}
+            />
+            {isSplittedAce[0] ? (
+              <>
+                {" "}
+                /{" "}
+                <CountUp
+                  start={prevSplittedTotalScore[0]}
+                  end={splittedTotalScore[0]}
+                  duration={1}
+                  delay={0}
+                />
+              </>
+            ) : null}
+          </Score>
+          <Score
+            ref={scoreRightRef}
+            isWin={winnerSplitted[1] === "player"}
+            isLose={winnerSplitted[1] === "dealer"}
+            isDraw={splittedDraw[1]}
+            isStand={isSplittedStand[1]}
+          >
+            <CountUp
+              start={prevSplittedScore[1]}
+              end={splittedScore[1]}
+              duration={1}
+              delay={0}
+            />
+            {isSplittedAce[1] ? (
+              <>
+                {" "}
+                /{" "}
+                <CountUp
+                  start={prevSplittedTotalScore[1]}
+                  end={splittedTotalScore[1]}
+                  duration={1}
+                  delay={0}
+                />
+              </>
+            ) : null}
+          </Score>
           {playerScore !== 0 && (
             <Score
               isWin={winner === "player"}
               isLose={winner === "dealer"}
               isDraw={isDraw}
+              isHidden={isSplitted}
             >
               <CountUp
                 start={prevPlayerScore}
@@ -1020,6 +1472,33 @@ function Single({ userId }) {
             SPLIT {canSplit && `$${sliderValue}`}
           </Button>
         </ButtonGroup>
+
+        <ButtonGroup absolute ref={smallBtnsRef}>
+          <Button
+            type="button"
+            disabled={isAnimating}
+            onClick={handleHit}
+            small
+          >
+            HIT
+          </Button>
+          <Button
+            type="button"
+            disabled={isAnimating}
+            onClick={handleStand}
+            small
+          >
+            STAND
+          </Button>
+          <Button
+            type="button"
+            disabled={isAnimating || !canDouble}
+            onClick={handleDoubleDown}
+            small
+          >
+            DOUBLE {canDouble && `$${sliderValue / 2}`}
+          </Button>
+        </ButtonGroup>
       </ButtonGroup>
     </Wrapper>
   );
@@ -1034,3 +1513,25 @@ Single.defaultProps = {
 };
 
 export default Single;
+
+/*
+1
+rules_version = '2';
+2
+service cloud.firestore {
+3
+  match /databases/{database}/documents {
+4
+    match /users/{userId} {
+5
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+6
+      allow create;
+7
+    }
+8
+  }
+9
+}
+
+*/

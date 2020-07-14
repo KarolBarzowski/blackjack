@@ -42,14 +42,14 @@ export const animateDeal = (
   gsap.defaults({ ease: "power3.inOut" });
 
   const dealCard = (element) => {
-    let deckRect = { right: 0, top: 0 };
+    let deckPos = { right: 0, top: 0 };
     if (deckRef) {
-      deckRect = deckRef.getBoundingClientRect();
+      deckPos = deckRef.getBoundingClientRect();
     }
 
-    let handRect = { right: 0, top: 0 };
+    let handPos = { right: 0, top: 0 };
     if (handRef) {
-      handRect = handRef.getBoundingClientRect();
+      handPos = handRef.getBoundingClientRect();
     }
 
     const tl = gsap.timeline();
@@ -57,8 +57,8 @@ export const animateDeal = (
     tl.fromTo(
       element,
       {
-        x: deckRect.right - handRect.right,
-        y: deckRect.top - handRect.top,
+        x: deckPos.right - handPos.right,
+        y: deckPos.top - handPos.top,
         visibility: "visible",
       },
       {
@@ -139,6 +139,26 @@ export const slideOutLeft = (element) => {
       x: "-=200px",
     }
   );
+
+  return tl;
+};
+
+export const moveLeft = (element) => {
+  const tl = gsap.timeline();
+
+  tl.to(element, {
+    x: -255,
+  });
+
+  return tl;
+};
+
+export const moveRight = (element) => {
+  const tl = gsap.timeline();
+
+  tl.to(element, {
+    x: 255,
+  });
 
   return tl;
 };

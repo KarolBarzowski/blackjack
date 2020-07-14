@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 const Button = styled.button`
   border: none;
@@ -15,7 +15,6 @@ const Button = styled.button`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   cursor: pointer;
   transition: background-color 0.05s ease-in-out;
-  z-index: 1;
   outline: none;
 
   :hover:not(:disabled) {
@@ -26,6 +25,12 @@ const Button = styled.button`
     cursor: default;
     opacity: 0.38 !important;
   }
+
+  ${({ small }) =>
+    small &&
+    css`
+      min-width: 8.9rem;
+    `}
 `;
 
 export default Button;

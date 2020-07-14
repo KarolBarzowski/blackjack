@@ -21,10 +21,10 @@ const Score = styled.p`
   background-color: rgba(0, 0, 0, 0.21);
   border-radius: 0.5rem;
   padding: 0.3rem 0.6rem;
-  min-width: 5.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  opacity: ${({ isHidden }) => (isHidden ? 0 : 1)} !important;
+  transition: background-color 0.15s ease-in-out, opacity 0.15s ease-in-out;
   animation: ${Appear} 0.15s ease-in-out forwards;
-  transition: background-color 0.15s ease-in-out;
 
   ::before {
     content: "";
@@ -40,6 +40,16 @@ const Score = styled.p`
     transition: border-bottom-color 0.15s ease-in-out;
   }
 
+  ${({ isStand }) =>
+    isStand &&
+    css`
+      background-color: ${({ theme }) => theme.orange};
+
+      ::before {
+        border-bottom-color: ${({ theme }) => theme.orange};
+      }
+    `};
+
   ${({ isWin }) =>
     isWin &&
     css`
@@ -48,7 +58,7 @@ const Score = styled.p`
       ::before {
         border-bottom-color: ${({ theme }) => theme.green};
       }
-    `}
+    `};
 
   ${({ isLose }) =>
     isLose &&
@@ -58,17 +68,17 @@ const Score = styled.p`
       ::before {
         border-bottom-color: ${({ theme }) => theme.red};
       }
-    `}
+    `};
 
-    ${({ isDraw }) =>
-      isDraw &&
-      css`
-        background-color: rgba(0, 0, 0, 0.21);
+  ${({ isDraw }) =>
+    isDraw &&
+    css`
+      background-color: rgba(0, 0, 0, 0.21);
 
-        ::before {
-          border-bottom-color: rgba(0, 0, 0, 0.21);
-        }
-      `}
+      ::before {
+        border-bottom-color: rgba(0, 0, 0, 0.21);
+      }
+    `};
 `;
 
 export default Score;

@@ -13,4 +13,5 @@ export const theme = {
   black: "rgb(28, 28, 30)",
   red: "rgb(255, 69, 58)",
   green: "rgb(48, 209, 88)",
+  orange: "rgb(255, 159, 10)",
 };
