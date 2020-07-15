@@ -9,6 +9,7 @@ import Welcome from "views/Welcome";
 import NotFound from "views/NotFound";
 import Single from "views/Single";
 import Login from "views/Login";
+import Tables from "views/Tables";
 import Nav from "components/Nav";
 
 function Root() {
@@ -53,7 +54,7 @@ function Root() {
           {!isUser && <Redirect to="/login" />}
           {/* {isUser && <Nav userId={userId} />} */}
           <Switch>
-            <Route path="/" exact component={Welcome} />
+            <Route path="/" exact component={Tables} />
             <Route path="/login" exact component={Login} />
             <Route
               path="/play"

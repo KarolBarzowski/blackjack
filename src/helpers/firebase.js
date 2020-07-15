@@ -2,7 +2,7 @@ import * as firebase from "firebase/app";
 
 import "firebase/auth";
 import "firebase/analytics";
-import "firebase/firestore";
+import "firebase/database";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6jZZDbHpgQlO_mDJL2jWBduM4HLDY3d0",
@@ -19,5 +19,5 @@ firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
 export const auth = firebase.auth();
-export const db = firebase.firestore();
+export const database = firebase.database();
 export const session = firebase.auth.Auth.Persistence.SESSION;

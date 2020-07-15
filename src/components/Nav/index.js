@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { auth, db } from "helpers/firebase";
+import { auth, database } from "helpers/firebase";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
@@ -63,17 +63,16 @@ function Nav({ userId }) {
 
   useEffect(() => {
     if (userId) {
-      const nickRef = db.collection("users").doc(userId);
-
-      nickRef.get().then((doc) => {
-        if (doc.exists) {
-          setNick(doc.data().nick);
-          setBalance(doc.data().balance);
-        } else {
-          setNick("Wystąpił błąd!");
-          setBalance("Wystąpił błąd!");
-        }
-      });
+      // const nickRef = db.collection("users").doc(userId);
+      // nickRef.get().then((doc) => {
+      //   if (doc.exists) {
+      //     setNick(doc.data().nick);
+      //     setBalance(doc.data().balance);
+      //   } else {
+      //     setNick("Wystąpił błąd!");
+      //     setBalance("Wystąpił błąd!");
+      //   }
+      // });
     }
   }, [userId]);
 

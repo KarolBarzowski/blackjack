@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
-import { auth, session, db } from "helpers/firebase";
+import { auth, session, database } from "helpers/firebase";
 import { Redirect } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -288,7 +288,7 @@ function Login() {
         auth
           .createUserWithEmailAndPassword(email, password)
           .then(() => {
-            db.collection("users").doc(auth.currentUser.uid).set({
+            database.ref("users/" + auth.currentUser.uid).set({
               nick,
               balance: 200,
             });

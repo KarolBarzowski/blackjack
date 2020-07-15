@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styled, { css } from "styled-components";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { db } from "helpers/firebase";
+import { database } from "helpers/firebase";
 import { gsap } from "gsap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -305,15 +305,14 @@ function Single({ userId }) {
 
   useEffect(() => {
     if (userId) {
-      const dbRef = db.collection("users").doc(userId);
-
-      dbRef.onSnapshot((doc) => {
-        if (doc.data()) {
-          setBalance(doc.data().balance);
-        } else {
-          setBalance("Error");
-        }
-      });
+      // const dbRef = db.collection("users").doc(userId);
+      // dbRef.onSnapshot((doc) => {
+      //   if (doc.data()) {
+      //     setBalance(doc.data().balance);
+      //   } else {
+      //     setBalance("Error");
+      //   }
+      // });
     }
   }, [userId]);
 
@@ -1513,25 +1512,3 @@ Single.defaultProps = {
 };
 
 export default Single;
-
-/*
-1
-rules_version = '2';
-2
-service cloud.firestore {
-3
-  match /databases/{database}/documents {
-4
-    match /users/{userId} {
-5
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-6
-      allow create;
-7
-    }
-8
-  }
-9
-}
-
-*/
