@@ -44,7 +44,8 @@ const LeaveButton = styled.button`
     transition: color 0.05s ease-in-out;
   }
 
-  :hover {
+  :hover,
+  :focus {
     ${StyledParagraph} {
       color: ${({ theme }) => theme.text};
     }
@@ -59,7 +60,10 @@ function Game({ match }) {
   const leaveRef = useRef(null);
 
   const [isRedirect, setIsRedirect] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [player, setPlayer] = useState({});
+  const [players, setPlayers] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -68,17 +72,26 @@ function Game({ match }) {
       const userId = user.uid;
       setUserId(userId);
 
-      database
-        .ref(`/users/${userId}/currentTable`)
-        .once("value")
-        .then((snapshot) => {
-          if (snapshot.val() !== match.params.tableId) setIsRedirect(true);
-        });
+      const userRef = database.ref(`/users/${userId}`);
+      const gameRef = database.ref(`/games/${match.params.tableId}`);
 
-      database.ref(`/games/${match.params.tableId}/players`).update({
-        [userId]: {
-          id: userId,
-        },
+      userRef.once("value").then((snapshot) => {
+        if (snapshot.val().currentTable !== match.params.tableId)
+          setIsRedirect(true);
+
+        const { nickname, avatarId, balance } = snapshot.val();
+
+        const player = {
+          nickname,
+          avatarId,
+          balance,
+        };
+
+        setPlayer(player);
+      });
+
+      gameRef.child("owner").once("value", (snapshot) => {
+        if (snapshot.val() === userId) setIsOwner(true);
       });
     }
 
@@ -87,6 +100,32 @@ function Game({ match }) {
       database.ref(`/games/${match.params.tableId}/players/${userId}`).remove();
     };
   }, [match, userId]);
+
+  useEffect(() => {
+    const gameRef = database.ref(`/games/${match.params.tableId}`);
+
+    gameRef.child(`players`).update(
+      {
+        [userId]: {
+          id: userId,
+          ...player,
+        },
+      },
+      () => {
+        const playersList = [];
+
+        gameRef.child(`players`).on("value", (snapshot) => {
+          snapshot.forEach((childSnapshot) => {
+            playersList.push(childSnapshot.val());
+          });
+        });
+
+        setPlayers(playersList);
+      }
+    );
+
+    // eslint-disable-next-line
+  }, [player]);
 
   const handleBack = () => {
     database.ref(`/users/${userId}/currentTable`).remove();
@@ -101,6 +140,7 @@ function Game({ match }) {
         <Icon icon={faArrowLeft} />
         <StyledParagraph>Leave table</StyledParagraph>
       </LeaveButton>
+      {console.log(players)}
     </TableTemplate>
   );
 }
