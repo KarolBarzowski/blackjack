@@ -1,3 +1,7 @@
+import React from "react";
+import { ReactComponent as Avatar0 } from "assets/avatars/0.svg";
+import { ReactComponent as Avatar1 } from "assets/avatars/1.svg";
+
 export const createDeck = () => {
   const deck = [];
   const values = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"];
@@ -43,4 +47,16 @@ export const getCardValue = (value, score) => {
   }
 
   return score;
+};
+
+export const getAvatar = (id) => {
+  switch (id) {
+    case 0:
+      return <Avatar0 />;
+    case 1:
+      return <Avatar1 />;
+
+    default:
+      break;
+  }
 };

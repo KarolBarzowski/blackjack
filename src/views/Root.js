@@ -1,26 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { auth } from "helpers/firebase";
+import { auth, database } from "helpers/firebase";
 import { ThemeProvider } from "styled-components";
 import GlobalStyle from "theme/GlobalStyle";
 import { theme } from "theme/mainTheme";
 import { BrowserRouter, Switch, Route, Redirect } from "react-router-dom";
-import Welcome from "views/Welcome";
 import NotFound from "views/NotFound";
 import Single from "views/Single";
 import Login from "views/Login";
 import Tables from "views/Tables";
-import Nav from "components/Nav";
+import Game from "views/Game";
 
 function Root() {
   const [isUser, setIsUser] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [isRedirect, setIsRedirect] = useState(false);
+  const [redirectTo, setRedirectTo] = useState(false);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
         setIsUser(true);
         setUserId(user.uid);
+
+        database
+          .ref(`/users/${user.uid}/currentTable`)
+          .on("value", (snapshot) => {
+            if (snapshot.exists()) {
+              setRedirectTo(snapshot.val());
+              setIsRedirect(true);
+            }
+          });
       } else {
         setIsUser(false);
       }
@@ -52,9 +62,11 @@ function Root() {
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           {!isUser && <Redirect to="/login" />}
+          {isRedirect && <Redirect to={`/tables/${redirectTo}`} />}
           {/* {isUser && <Nav userId={userId} />} */}
           <Switch>
-            <Route path="/" exact component={Tables} />
+            <Route path="/" exact render={() => <Tables userId={userId} />} />
+            <Route path="/tables/:tableId" component={Game} />
             <Route path="/login" exact component={Login} />
             <Route
               path="/play"

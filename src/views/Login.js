@@ -289,7 +289,7 @@ function Login() {
           .createUserWithEmailAndPassword(email, password)
           .then(() => {
             database.ref("users/" + auth.currentUser.uid).set({
-              nick,
+              nickname: nick,
               balance: 200,
             });
             setIsValidating(false);
