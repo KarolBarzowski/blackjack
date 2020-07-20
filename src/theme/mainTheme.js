@@ -10,7 +10,7 @@ export const theme = {
   hover: "rgba(79, 84, 92, .16)",
   text: "rgba(255, 255, 255, .87)",
   textSecondary: "rgba(255, 255, 255, .60)",
-  blue: "rgb(0, 132, 255)",
+  blue: "rgb(10, 132, 255)",
   table: "rgb(36, 138, 61)",
   black: "rgb(28, 28, 30)",
   red: "rgb(255, 69, 58)",

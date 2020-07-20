@@ -2,9 +2,14 @@ import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
 import backgroundPattern from "assets/images/bg.png";
 import { ReactComponent as Text } from "assets/images/text.svg";
+import { getAvatar } from "helpers/functions";
 import { FadeIn } from "helpers/animations";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCog } from "@fortawesome/free-solid-svg-icons";
+import Paragraph from "components/Paragraph";
 
 const Wrapper = styled.div`
+  position: relative;
   min-height: 100vh;
   width: 100%;
   padding: 3.4rem 1.5rem 5.5rem 1.5rem;
@@ -29,12 +34,80 @@ const TableText = styled.div`
   user-select: none;
 `;
 
-function TableTemplate({ children }) {
+const Players = styled.div`
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  width: 100%;
+  height: 14.4rem;
+`;
+
+const PlayerInfo = styled.div`
+  position: absolute;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.21);
+  border-radius: 0.5rem;
+  padding: 1rem;
+
+  :first-of-type {
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  :nth-of-type(2) {
+    bottom: 5.5rem;
+    left: 5.5rem;
+  }
+
+  :nth-of-type(3) {
+    bottom: 5.5rem;
+    right: 5.5rem;
+  }
+`;
+
+const Avatar = styled.div`
+  min-width: 4.8rem;
+  max-width: 4.8rem;
+  min-height: 4.8rem;
+  max-height: 4.8rem;
+  margin-right: 1rem;
+`;
+
+const Column = styled.div`
+  display: flex;
+  flex-flow: column nowrap;
+`;
+
+const StyledParagraph = styled(Paragraph)`
+  color: ${({ theme }) => theme.textSecondary};
+  font-size: 1.6rem;
+`;
+
+const BlueParagraph = styled(Paragraph)`
+  color: ${({ isOwner, theme }) => (isOwner ? theme.blue : theme.text)};
+`;
+
+function TableTemplate({ children, players }) {
   return (
     <Wrapper>
       <TableText>
         <Text />
       </TableText>
+      <Players>
+        {players.map(({ avatarId, balance, nickname, isOwner }, i) => (
+          <PlayerInfo key={i.toString()}>
+            <Avatar>{getAvatar(avatarId)}</Avatar>
+            <Column>
+              <BlueParagraph isOwner={isOwner}>{nickname}</BlueParagraph>
+              <StyledParagraph>${balance}</StyledParagraph>
+            </Column>
+          </PlayerInfo>
+        ))}
+      </Players>
       {children}
     </Wrapper>
   );

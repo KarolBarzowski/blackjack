@@ -25,7 +25,8 @@ function Root() {
 
         database
           .ref(`/users/${user.uid}/currentTable`)
-          .on("value", (snapshot) => {
+          .once("value")
+          .then((snapshot) => {
             if (snapshot.exists()) {
               setRedirectTo(snapshot.val());
               setIsRedirect(true);
@@ -35,7 +36,7 @@ function Root() {
         setIsUser(false);
       }
     });
-  }, [isUser]);
+  }, [isUser, userId]);
 
   return (
     <div>

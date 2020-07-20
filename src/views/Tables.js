@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
+import { Redirect } from "react-router-dom";
 import { database } from "helpers/firebase";
 import { Appear } from "helpers/animations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -161,6 +162,7 @@ function Tables({ userId }) {
   const [joiningTable, setJoiningTable] = useState(null);
   const [password, setPassword] = useState("");
   const [isError, setIsError] = useState(false);
+  const [isRedirect, setIsRedirect] = useState(false);
 
   useEffect(() => {
     const gamesRef = database.ref("/games");
@@ -226,13 +228,14 @@ function Tables({ userId }) {
   };
 
   const handleJoin = (table) => {
+    setJoiningTable(table);
     if (table.isPrivate) {
-      setJoiningTable(table);
       setActive("join");
     } else {
       database.ref(`/users/${userId}`).update({
         currentTable: table.id,
       });
+      setIsRedirect(true);
     }
   };
 
@@ -241,6 +244,7 @@ function Tables({ userId }) {
       database.ref(`/users/${userId}`).update({
         currentTable: joiningTable.id,
       });
+      setIsRedirect(true);
     } else {
       setIsError(true);
     }
@@ -249,6 +253,8 @@ function Tables({ userId }) {
   const handleDelete = (table) => {
     database.ref(`/games/${table.id}`).remove();
   };
+
+  if (isRedirect) return <Redirect to={`/tables/${joiningTable.id}`} />;
 
   return (
     <Container>

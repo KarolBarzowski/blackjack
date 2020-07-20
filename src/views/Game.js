@@ -4,13 +4,11 @@ import { withRouter, Redirect, Link } from "react-router-dom";
 import { database, auth } from "helpers/firebase";
 import { FadeIn } from "helpers/animations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faPlus,
-  faMinus,
-  faArrowLeft,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import TableTemplate from "templates/TableTemplate";
 import Paragraph from "components/Paragraph";
+import Loading from "components/Loading";
+import Button from "components/Button";
 
 const StyledParagraph = styled(Paragraph)`
   margin: 0 1rem;
@@ -56,24 +54,47 @@ const LeaveButton = styled.button`
   }
 `;
 
+const InfoWrapper = styled.div`
+  position: absolute;
+  bottom: 23.3rem;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.21);
+  border-radius: 0.5rem;
+  padding: 1rem;
+`;
+
+const InfoParagraph = styled(Paragraph)`
+  margin-bottom: 1.5rem;
+`;
+
+const Blue = styled.span`
+  color: ${({ theme }) => theme.blue};
+`;
+
 function Game({ match }) {
   const leaveRef = useRef(null);
 
+  const [isLoading, setIsLoading] = useState(true);
   const [isRedirect, setIsRedirect] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
   const [userId, setUserId] = useState(null);
   const [player, setPlayer] = useState({});
   const [players, setPlayers] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
+    let gameRef;
+    let userRef;
 
     if (user) {
       const userId = user.uid;
       setUserId(userId);
 
-      const userRef = database.ref(`/users/${userId}`);
-      const gameRef = database.ref(`/games/${match.params.tableId}`);
+      userRef = database.ref(`/users/${userId}`);
+      gameRef = database.ref(`/games/${match.params.tableId}`);
 
       userRef.once("value").then((snapshot) => {
         if (snapshot.val().currentTable !== match.params.tableId)
@@ -81,17 +102,26 @@ function Game({ match }) {
 
         const { nickname, avatarId, balance } = snapshot.val();
 
-        const player = {
-          nickname,
-          avatarId,
-          balance,
-        };
+        let isOwner = false;
 
-        setPlayer(player);
-      });
+        gameRef
+          .child("owner")
+          .once("value", (snapshot) => {
+            isOwner = snapshot.val() === userId;
+          })
+          .then(() => {
+            const player = {
+              nickname,
+              avatarId,
+              balance,
+              isOwner,
+              id: userId,
+            };
 
-      gameRef.child("owner").once("value", (snapshot) => {
-        if (snapshot.val() === userId) setIsOwner(true);
+            setIsOwner(isOwner);
+            setPlayer(player);
+            setIsLoading(false);
+          });
       });
     }
 
@@ -104,6 +134,8 @@ function Game({ match }) {
   useEffect(() => {
     const gameRef = database.ref(`/games/${match.params.tableId}`);
 
+    let playersListener;
+
     gameRef.child(`players`).update(
       {
         [userId]: {
@@ -112,35 +144,77 @@ function Game({ match }) {
         },
       },
       () => {
-        const playersList = [];
+        playersListener = gameRef.child(`players`).on("value", (snapshot) => {
+          const playersList = [];
 
-        gameRef.child(`players`).on("value", (snapshot) => {
           snapshot.forEach((childSnapshot) => {
-            playersList.push(childSnapshot.val());
+            if (userId !== childSnapshot.val().id)
+              playersList.push(childSnapshot.val());
           });
-        });
 
-        setPlayers(playersList);
+          setPlayers([player, ...playersList]);
+        });
       }
     );
 
+    return () => {
+      gameRef.child("players").off("value", playersListener);
+      setPlayers([]);
+    };
     // eslint-disable-next-line
   }, [player]);
+
+  useEffect(() => {
+    const gameRef = database.ref(`/games/${match.params.tableId}`);
+
+    const handleChangeState = (snapshot) => {
+      setIsStarted(snapshot.val());
+    };
+
+    gameRef.child("isStarted").on("value", handleChangeState);
+
+    return () => {
+      gameRef.child("isStarted").off("value", handleChangeState);
+    };
+  }, [match]);
 
   const handleBack = () => {
     database.ref(`/users/${userId}/currentTable`).remove();
     setIsRedirect(true);
   };
 
+  const handleStart = () => {
+    database.ref(`/games/${match.params.tableId}`).update({
+      isStarted: true,
+    });
+  };
+
   if (isRedirect) return <Redirect to="/" />;
 
-  return (
-    <TableTemplate>
+  return isLoading ? (
+    <Loading />
+  ) : (
+    <TableTemplate players={players}>
       <LeaveButton onClick={handleBack} ref={leaveRef}>
         <Icon icon={faArrowLeft} />
         <StyledParagraph>Leave table</StyledParagraph>
       </LeaveButton>
-      {console.log(players)}
+      {!isStarted && (
+        <InfoWrapper>
+          {isOwner ? (
+            <>
+              <InfoParagraph>Game is ready to start</InfoParagraph>
+              <Button type="button" onClick={handleStart}>
+                <Paragraph>Start</Paragraph>
+              </Button>
+            </>
+          ) : (
+            <Paragraph>
+              Waiting for <Blue>host</Blue> to start
+            </Paragraph>
+          )}
+        </InfoWrapper>
+      )}
     </TableTemplate>
   );
 }
