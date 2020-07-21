@@ -7,11 +7,13 @@ export const createDeck = () => {
   const values = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"];
   const suits = ["♠︎", "♥︎", "♣︎", "♦︎"];
 
-  values.forEach((value) => {
-    suits.forEach((suit, i) => {
-      deck.push({ value, suit, color: i % 2 ? "red" : "black" });
+  for (let i = 0; i < 6; i++) {
+    values.forEach((value) => {
+      suits.forEach((suit, i) => {
+        deck.push({ value, suit, color: i % 2 ? "red" : "black" });
+      });
     });
-  });
+  }
 
   return deck;
 };

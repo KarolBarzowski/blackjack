@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-
 const Reverse = styled.div`
   position: absolute;
   top: 0.5rem;

@@ -480,7 +480,7 @@ function Tables({ userId }) {
                 </Center>
               )}
               {active === "create table" && (
-                <CreateForm setActive={setActive} />
+                <CreateForm setActive={setActive} nickname={nickname} />
               )}
             </>
           </Content>

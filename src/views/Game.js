@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styled, { css } from "styled-components";
 import { withRouter, Redirect, Link } from "react-router-dom";
 import { database, auth } from "helpers/firebase";
+import { createDeck, shuffleDeck } from "helpers/functions";
 import { FadeIn } from "helpers/animations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -9,6 +10,7 @@ import TableTemplate from "templates/TableTemplate";
 import Paragraph from "components/Paragraph";
 import Loading from "components/Loading";
 import Button from "components/Button";
+import Deck from "components/Deck";
 
 const StyledParagraph = styled(Paragraph)`
   margin: 0 1rem;
@@ -83,6 +85,7 @@ function Game({ match }) {
   const [userId, setUserId] = useState(null);
   const [player, setPlayer] = useState({});
   const [players, setPlayers] = useState([]);
+  const [deck, setDeck] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -120,7 +123,6 @@ function Game({ match }) {
 
             setIsOwner(isOwner);
             setPlayer(player);
-            setIsLoading(false);
           });
       });
     }
@@ -153,6 +155,7 @@ function Game({ match }) {
           });
 
           setPlayers([player, ...playersList]);
+          setIsLoading(false);
         });
       }
     );
@@ -165,18 +168,38 @@ function Game({ match }) {
   }, [player]);
 
   useEffect(() => {
-    const gameRef = database.ref(`/games/${match.params.tableId}`);
+    // isStarted listener
+    const ref = database.ref(`/games/${match.params.tableId}/isStarted`);
 
-    const handleChangeState = (snapshot) => {
+    const handleUpdate = (snapshot) => {
       setIsStarted(snapshot.val());
     };
 
-    gameRef.child("isStarted").on("value", handleChangeState);
+    ref.on("value", handleUpdate);
 
     return () => {
-      gameRef.child("isStarted").off("value", handleChangeState);
+      ref.off("value", handleUpdate);
     };
   }, [match]);
+
+  useEffect(() => {
+    // deck listener
+    const ref = database.ref(`/games/${match.params.tableId}/deck`);
+
+    const handleUpdate = (snapshot) => {
+      setDeck(snapshot.val());
+    };
+
+    ref.on("value", handleUpdate);
+
+    return () => {
+      ref.off("value", handleUpdate);
+    };
+  }, [match]);
+
+  // useEffect(() => {
+
+  // }, [deck]);
 
   const handleBack = () => {
     database.ref(`/users/${userId}/currentTable`).remove();
@@ -184,9 +207,11 @@ function Game({ match }) {
   };
 
   const handleStart = () => {
-    database.ref(`/games/${match.params.tableId}`).update({
-      isStarted: true,
-    });
+    const gameRef = database.ref(`/games/${match.params.tableId}`);
+
+    const deck = shuffleDeck(createDeck());
+
+    gameRef.update({ deck, isStarted: true });
   };
 
   if (isRedirect) return <Redirect to="/" />;
@@ -215,6 +240,7 @@ function Game({ match }) {
           )}
         </InfoWrapper>
       )}
+      <Deck />
     </TableTemplate>
   );
 }

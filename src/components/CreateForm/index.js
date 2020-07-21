@@ -119,9 +119,9 @@ const Button = styled.button`
     `};
 `;
 
-function CreateForm({ setActive }) {
-  const [name, setName] = useState("Karol's table");
-  const [defaultName, setDefaultName] = useState("Karol's table");
+function CreateForm({ setActive, nickname }) {
+  const [name, setName] = useState(`${nickname}'s table`);
+  const [defaultName, setDefaultName] = useState(`${nickname}'s table`);
   const [isOpen, setIsOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [stake, setStake] = useState(0);
