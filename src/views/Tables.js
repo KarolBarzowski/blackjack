@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
-import { Redirect, Link } from "react-router-dom";
+import { Redirect, Link, withRouter, useHistory } from "react-router-dom";
+import queryString from "query-string";
 import { database } from "helpers/firebase";
 import { Appear } from "helpers/animations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -175,7 +176,7 @@ function Tables({ userId }) {
   const [balance, setBalance] = useState(null);
   const [avatarId, setAvatarId] = useState(null);
   const [hasTable, setHasTable] = useState(0);
-  const [active, setActive] = useState("all tables");
+  const [active, setActive] = useState("play");
   const [allTables, setAllTables] = useState([]);
   const [publicTables, setPublicTables] = useState([]);
   const [officialTables, setOfficialTables] = useState([]);
@@ -184,10 +185,9 @@ function Tables({ userId }) {
   const [password, setPassword] = useState("");
   const [isError, setIsError] = useState(false);
   const [isRedirect, setIsRedirect] = useState(false);
+  const history = useHistory();
 
   useEffect(() => {
-    const gamesRef = database.ref("/games");
-
     if (userId) {
       database
         .ref(`/users/${userId}`)
@@ -198,84 +198,17 @@ function Tables({ userId }) {
           setNickname(nickname);
           setBalance(balance);
           setAvatarId(avatarId);
-          // setHasTable(hasTable);
           setIsLoading(false);
         });
-
-      // handleUpdateLists();
-
-      // gamesRef.on("child_added", handleUpdateLists);
-      // gamesRef.on("child_changed", handleUpdateLists);
-      // gamesRef.on("child_removed", handleUpdateLists);
     }
-
-    // return () => {
-    //   gamesRef.off("child_added", handleUpdateLists);
-    //   gamesRef.off("child_changed", handleUpdateLists);
-    //   gamesRef.off("child_removed", handleUpdateLists);
-    // };
-    // eslint-disable-next-line
   }, [setIsLoading, userId]);
 
-  // const handleUpdateLists = () => {
-  //   const newAllTables = [];
-  //   const newOfficialTables = [];
-  //   const newPublicTables = [];
-  //   const newPrivateTables = [];
-  //   let ownTables = 0;
-
-  //   var gamesRef = database.ref("/games");
-
-  //   gamesRef.once("value", (snapshot) => {
-  //     snapshot.forEach((childSnapshot) => {
-  //       newAllTables.push(childSnapshot.val());
-  //       if (childSnapshot.val().owner === userId) ownTables += 1;
-
-  //       if (childSnapshot.val().isPrivate)
-  //         newPrivateTables.push(childSnapshot.val());
-  //       else if (childSnapshot.val().owner !== "official")
-  //         newPublicTables.push(childSnapshot.val());
-
-  //       if (childSnapshot.val().owner === "official")
-  //         newOfficialTables.push(childSnapshot.val());
-  //     });
-
-  //     setAllTables(newAllTables);
-  //     setOfficialTables(newOfficialTables);
-  //     setPublicTables(newPublicTables);
-  //     setPrivateTables(newPrivateTables);
-  //     setHasTable(ownTables);
-  //   });
-  // };
-
-  // const handleJoin = (table) => {
-  //   setJoiningTable(table);
-  //   if (table.isPrivate) {
-  //     setActive("join");
-  //   } else {
-  //     database.ref(`/users/${userId}`).update({
-  //       currentTable: table.id,
-  //     });
-  //     setIsRedirect(true);
-  //   }
-  // };
-
-  // const handleEnterPassword = () => {
-  //   if (password === joiningTable.password) {
-  //     database.ref(`/users/${userId}`).update({
-  //       currentTable: joiningTable.id,
-  //     });
-  //     setIsRedirect(true);
-  //   } else {
-  //     setIsError(true);
-  //   }
-  // };
-
-  // const handleDelete = (table) => {
-  //   database.ref(`/games/${table.id}`).remove();
-  // };
-
-  // if (isRedirect) return <Redirect to={`/tables/${joiningTable.id}`} />;
+  useEffect(() => {
+    const { active } = queryString.parse(history.location.search);
+    if (active) {
+      setActive(active);
+    }
+  }, [history]);
 
   return (
     <Container>
@@ -287,226 +220,20 @@ function Tables({ userId }) {
             nickname={nickname}
             balance={balance}
             avatarId={avatarId}
-            // active={active}
-            // setActive={setActive}
-            // allTablesLength={allTables.length}
-            // publicTablesLength={publicTables.length}
-            // officialTablesLength={officialTables.length}
-            // privateTablesLength={privateTables.length}
-            // hasTable={hasTable}
+            active={active}
+            setActive={setActive}
           />
           <Content>
-            <Tile to="play">
-              <Paragraph>Play</Paragraph>
-            </Tile>
-            {/* <>
-              {active === "all tables" && (
-                <List>
-                  {allTables.map(
-                    (
-                      { id, isPrivate, name, min, max, players = {}, owner },
-                      i
-                    ) => (
-                      <ListItem key={i.toString()}>
-                        <Icon
-                          icon={
-                            owner === "official"
-                              ? faCertificate
-                              : isPrivate
-                              ? faLock
-                              : faLockOpen
-                          }
-                          color={
-                            owner === "official"
-                              ? "rgb(0, 132, 255)"
-                              : isPrivate
-                              ? "rgb(255, 159, 10)"
-                              : "rgb(52, 199, 89)"
-                          }
-                        />
-                        <StyledParagraph>{name}</StyledParagraph>
-                        <StyledParagraph>
-                          ${min} - ${max}
-                        </StyledParagraph>
-                        <StyledParagraph>
-                          {Object.keys(players).length}/3
-                        </StyledParagraph>
-                        <Button
-                          type="button"
-                          orange={isPrivate}
-                          disabled={
-                            balance < min || Object.keys(players).length >= 3
-                          }
-                          onClick={() => handleJoin(allTables[i])}
-                        >
-                          <Paragraph>Join</Paragraph>
-                        </Button>
-                      </ListItem>
-                    )
-                  )}
-                </List>
-              )}
-              {active === "your tables" && (
-                <List>
-                  {allTables.map(
-                    (
-                      { id, isPrivate, name, min, max, players = {}, owner },
-                      i
-                    ) =>
-                      owner === userId && (
-                        <ListItem key={i.toString()}>
-                          <Icon
-                            icon={isPrivate ? faLock : faLockOpen}
-                            color={
-                              isPrivate
-                                ? "rgb(255, 159, 10)"
-                                : "rgb(52, 199, 89)"
-                            }
-                          />
-                          <StyledParagraph>{name}</StyledParagraph>
-                          <StyledParagraph>
-                            ${min} - ${max}
-                          </StyledParagraph>
-                          <StyledParagraph>
-                            {Object.keys(players).length}/3
-                          </StyledParagraph>
-                          <div>
-                            <Button
-                              type="button"
-                              remove
-                              disabled={Object.keys(players).length}
-                              onClick={() => handleDelete(allTables[i])}
-                            >
-                              <Paragraph>Delete</Paragraph>
-                            </Button>
-                            <Button
-                              type="button"
-                              orange={isPrivate}
-                              disabled={
-                                balance < min ||
-                                Object.keys(players).length >= 3
-                              }
-                              onClick={() => handleJoin(allTables[i])}
-                            >
-                              <Paragraph>Join</Paragraph>
-                            </Button>
-                          </div>
-                        </ListItem>
-                      )
-                  )}
-                </List>
-              )}
-              {active === "public tables" && (
-                <List>
-                  {publicTables.map(
-                    ({ id, isPrivate, name, min, max, players = {} }, i) => (
-                      <ListItem key={i.toString()}>
-                        <Icon icon={faLockOpen} color="rgb(52, 199, 89)" />
-                        <StyledParagraph>{name}</StyledParagraph>
-                        <StyledParagraph>
-                          ${min} - ${max}
-                        </StyledParagraph>
-                        <StyledParagraph>
-                          {Object.keys(players).length}/3
-                        </StyledParagraph>
-                        <Button
-                          type="button"
-                          orange={isPrivate}
-                          disabled={
-                            balance < min || Object.keys(players).length >= 3
-                          }
-                          onClick={() => handleJoin(publicTables[i])}
-                        >
-                          <Paragraph>Join</Paragraph>
-                        </Button>
-                      </ListItem>
-                    )
-                  )}
-                </List>
-              )}
-              {active === "private tables" && (
-                <List>
-                  {privateTables.map(
-                    ({ id, isPrivate, name, min, max, players = {} }, i) => (
-                      <ListItem key={i.toString()}>
-                        <Icon icon={faLock} color="rgb(255, 159, 10)" />
-                        <StyledParagraph>{name}</StyledParagraph>
-                        <StyledParagraph>
-                          ${min} - ${max}
-                        </StyledParagraph>
-                        <StyledParagraph>
-                          {Object.keys(players).length}/3
-                        </StyledParagraph>
-                        <Button
-                          type="button"
-                          orange={isPrivate}
-                          disabled={
-                            balance < min || Object.keys(players).length >= 3
-                          }
-                          onClick={() => handleJoin(privateTables[i])}
-                        >
-                          <Paragraph>Join</Paragraph>
-                        </Button>
-                      </ListItem>
-                    )
-                  )}
-                </List>
-              )}
-              {active === "official tables" && (
-                <List>
-                  {officialTables.map(
-                    ({ id, isPrivate, name, min, max, players = {} }, i) => (
-                      <ListItem key={i.toString()}>
-                        <Icon icon={faCertificate} color="rgb(0, 132, 255)" />
-                        <StyledParagraph>{name}</StyledParagraph>
-                        <StyledParagraph>
-                          ${min} - ${max}
-                        </StyledParagraph>
-                        <StyledParagraph>
-                          {Object.keys(players).length}/3
-                        </StyledParagraph>
-                        <Button
-                          type="button"
-                          orange={isPrivate}
-                          disabled={
-                            balance < min || Object.keys(players).length >= 3
-                          }
-                          onClick={() => handleJoin(officialTables[i])}
-                        >
-                          <Paragraph>Join</Paragraph>
-                        </Button>
-                      </ListItem>
-                    )
-                  )}
-                </List>
-              )}
-              {active === "join" && (
-                <Center>
-                  <Heading>Join private table</Heading>
-                  <Paragraph>Enter password for {joiningTable.name}</Paragraph>
-                  <Input
-                    type="text"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.which === 13 && password.length && handleEnterPassword()
-                    }
-                  />
-                  {isError && <Error>Wrong password!</Error>}
-                  <Button
-                    type="button"
-                    disabled={!password.length}
-                    onClick={handleEnterPassword}
-                  >
-                    <Paragraph>Join</Paragraph>
-                  </Button>
-                </Center>
-              )}
-              {active === "create table" && (
-                <CreateForm setActive={setActive} nickname={nickname} />
-              )}
-            </> */}
+            {active === "play" && (
+              <Tile to="play">
+                <Paragraph>Play</Paragraph>
+              </Tile>
+            )}
+            {active === "bank" && (
+              <Tile>
+                <Paragraph>Bank</Paragraph>
+              </Tile>
+            )}
           </Content>
         </Wrapper>
       )}

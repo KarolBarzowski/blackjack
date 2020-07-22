@@ -58,8 +58,8 @@ function Root() {
           <Switch>
             <Route path="/" exact render={() => <Tables userId={userId} />} />
             {/* <Route path="/tables/:tableId" component={Game} /> */}
-            <Route path="/login" exact component={Login} />
-            <Route path="/play" exact render={() => <Game userId={userId} />} />
+            <Route path="/login" component={Login} />
+            <Route path="/play" render={() => <Game userId={userId} />} />
             <Route component={NotFound} />
           </Switch>
         </ThemeProvider>

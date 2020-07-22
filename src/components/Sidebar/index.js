@@ -4,13 +4,9 @@ import { getAvatar } from "helpers/functions";
 import { auth } from "helpers/firebase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faPlay,
+  faPiggyBank,
   faSignOutAlt,
-  faPlus,
-  faListUl,
-  faCertificate,
-  faLock,
-  faLockOpen,
-  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import Paragraph from "components/Paragraph";
 
@@ -131,8 +127,8 @@ function Sidebar({
   nickname,
   balance,
   avatarId,
-  // active,
-  // setActive,
+  active,
+  setActive,
   // allTablesLength,
   // hasTable,
   // publicTablesLength,
@@ -156,6 +152,36 @@ function Sidebar({
         </ButtonIcon>
       </ProfileInfo>
       <List>
+        <div>
+          <ListItem>
+            <Button
+              type="button"
+              onClick={() => setActive("play")}
+              active={active === "play"}
+            >
+              <Paragraph>
+                <FontAwesomeIcon icon={faPlay} fixedWidth transform="left-5" />
+                Play
+              </Paragraph>
+            </Button>
+          </ListItem>
+          <ListItem>
+            <Button
+              type="button"
+              onClick={() => setActive("bank")}
+              active={active === "bank"}
+            >
+              <Paragraph>
+                <FontAwesomeIcon
+                  icon={faPiggyBank}
+                  fixedWidth
+                  transform="left-5"
+                />
+                Bank
+              </Paragraph>
+            </Button>
+          </ListItem>
+        </div>
         {/* <div>
           <ListItem>
             <Button
