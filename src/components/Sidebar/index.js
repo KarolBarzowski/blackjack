@@ -131,13 +131,13 @@ function Sidebar({
   nickname,
   balance,
   avatarId,
-  active,
-  setActive,
-  allTablesLength,
-  hasTable,
-  publicTablesLength,
-  privateTablesLength,
-  officialTablesLength,
+  // active,
+  // setActive,
+  // allTablesLength,
+  // hasTable,
+  // publicTablesLength,
+  // privateTablesLength,
+  // officialTablesLength,
 }) {
   return (
     <Wrapper>
@@ -156,7 +156,7 @@ function Sidebar({
         </ButtonIcon>
       </ProfileInfo>
       <List>
-        <div>
+        {/* <div>
           <ListItem>
             <Button
               type="button"
@@ -261,7 +261,7 @@ function Sidebar({
             </Paragraph>
             <Paragraph>{hasTable ? 1 : 0}/1</Paragraph>
           </Button>
-        </ListItem>
+        </ListItem> */}
       </List>
     </Wrapper>
   );

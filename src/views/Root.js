@@ -14,24 +14,14 @@ import Game from "views/Game";
 function Root() {
   const [isUser, setIsUser] = useState(true);
   const [userId, setUserId] = useState(null);
-  const [isRedirect, setIsRedirect] = useState(false);
-  const [redirectTo, setRedirectTo] = useState(false);
+  // const [isRedirect, setIsRedirect] = useState(false);
+  // const [redirectTo, setRedirectTo] = useState(false);
 
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
       if (user) {
         setIsUser(true);
         setUserId(user.uid);
-
-        database
-          .ref(`/users/${user.uid}/currentTable`)
-          .once("value")
-          .then((snapshot) => {
-            if (snapshot.exists()) {
-              setRedirectTo(snapshot.val());
-              setIsRedirect(true);
-            }
-          });
       } else {
         setIsUser(false);
       }
@@ -63,17 +53,13 @@ function Root() {
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           {!isUser && <Redirect to="/login" />}
-          {isRedirect && <Redirect to={`/tables/${redirectTo}`} />}
+          {/* {isRedirect && <Redirect to={`/tables/${redirectTo}`} />} */}
           {/* {isUser && <Nav userId={userId} />} */}
           <Switch>
             <Route path="/" exact render={() => <Tables userId={userId} />} />
-            <Route path="/tables/:tableId" component={Game} />
+            {/* <Route path="/tables/:tableId" component={Game} /> */}
             <Route path="/login" exact component={Login} />
-            <Route
-              path="/play"
-              exact
-              render={() => <Single userId={userId} />}
-            />
+            <Route path="/play" exact render={() => <Game userId={userId} />} />
             <Route component={NotFound} />
           </Switch>
         </ThemeProvider>

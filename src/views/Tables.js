@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
-import { Redirect } from "react-router-dom";
+import { Redirect, Link } from "react-router-dom";
 import { database } from "helpers/firebase";
 import { Appear } from "helpers/animations";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,10 +38,13 @@ const Wrapper = styled.div`
 `;
 
 const Content = styled.div`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
   height: 100%;
   width: 100%;
   padding: 1.5rem 1rem;
-  overflow-y: scroll;
 `;
 
 const List = styled.ul`
@@ -148,6 +151,24 @@ const Error = styled(Paragraph)`
   margin: 0 0 1.5rem 0;
 `;
 
+const Tile = styled(Link)`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  align-self: center;
+  height: 80%;
+  width: 80%;
+  padding: 3rem;
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 3rem;
+  transition: transform 0.15s ease-in-out;
+
+  :hover {
+    transform: scale(1.05);
+  }
+`;
+
 function Tables({ userId }) {
   const [isLoading, setIsLoading] = useState(true);
   const [nickname, setNickname] = useState(null);
@@ -172,89 +193,89 @@ function Tables({ userId }) {
         .ref(`/users/${userId}`)
         .once("value")
         .then((snapshot) => {
-          const { nickname, balance, avatarId, hasTable } = snapshot.val();
+          const { nickname, balance, avatarId } = snapshot.val();
 
           setNickname(nickname);
           setBalance(balance);
           setAvatarId(avatarId);
-          setHasTable(hasTable);
+          // setHasTable(hasTable);
           setIsLoading(false);
         });
 
-      handleUpdateLists();
+      // handleUpdateLists();
 
-      gamesRef.on("child_added", handleUpdateLists);
-      gamesRef.on("child_changed", handleUpdateLists);
-      gamesRef.on("child_removed", handleUpdateLists);
+      // gamesRef.on("child_added", handleUpdateLists);
+      // gamesRef.on("child_changed", handleUpdateLists);
+      // gamesRef.on("child_removed", handleUpdateLists);
     }
 
-    return () => {
-      gamesRef.off("child_added", handleUpdateLists);
-      gamesRef.off("child_changed", handleUpdateLists);
-      gamesRef.off("child_removed", handleUpdateLists);
-    };
+    // return () => {
+    //   gamesRef.off("child_added", handleUpdateLists);
+    //   gamesRef.off("child_changed", handleUpdateLists);
+    //   gamesRef.off("child_removed", handleUpdateLists);
+    // };
     // eslint-disable-next-line
   }, [setIsLoading, userId]);
 
-  const handleUpdateLists = () => {
-    const newAllTables = [];
-    const newOfficialTables = [];
-    const newPublicTables = [];
-    const newPrivateTables = [];
-    let ownTables = 0;
+  // const handleUpdateLists = () => {
+  //   const newAllTables = [];
+  //   const newOfficialTables = [];
+  //   const newPublicTables = [];
+  //   const newPrivateTables = [];
+  //   let ownTables = 0;
 
-    var gamesRef = database.ref("/games");
+  //   var gamesRef = database.ref("/games");
 
-    gamesRef.once("value", (snapshot) => {
-      snapshot.forEach((childSnapshot) => {
-        newAllTables.push(childSnapshot.val());
-        if (childSnapshot.val().owner === userId) ownTables += 1;
+  //   gamesRef.once("value", (snapshot) => {
+  //     snapshot.forEach((childSnapshot) => {
+  //       newAllTables.push(childSnapshot.val());
+  //       if (childSnapshot.val().owner === userId) ownTables += 1;
 
-        if (childSnapshot.val().isPrivate)
-          newPrivateTables.push(childSnapshot.val());
-        else if (childSnapshot.val().owner !== "official")
-          newPublicTables.push(childSnapshot.val());
+  //       if (childSnapshot.val().isPrivate)
+  //         newPrivateTables.push(childSnapshot.val());
+  //       else if (childSnapshot.val().owner !== "official")
+  //         newPublicTables.push(childSnapshot.val());
 
-        if (childSnapshot.val().owner === "official")
-          newOfficialTables.push(childSnapshot.val());
-      });
+  //       if (childSnapshot.val().owner === "official")
+  //         newOfficialTables.push(childSnapshot.val());
+  //     });
 
-      setAllTables(newAllTables);
-      setOfficialTables(newOfficialTables);
-      setPublicTables(newPublicTables);
-      setPrivateTables(newPrivateTables);
-      setHasTable(ownTables);
-    });
-  };
+  //     setAllTables(newAllTables);
+  //     setOfficialTables(newOfficialTables);
+  //     setPublicTables(newPublicTables);
+  //     setPrivateTables(newPrivateTables);
+  //     setHasTable(ownTables);
+  //   });
+  // };
 
-  const handleJoin = (table) => {
-    setJoiningTable(table);
-    if (table.isPrivate) {
-      setActive("join");
-    } else {
-      database.ref(`/users/${userId}`).update({
-        currentTable: table.id,
-      });
-      setIsRedirect(true);
-    }
-  };
+  // const handleJoin = (table) => {
+  //   setJoiningTable(table);
+  //   if (table.isPrivate) {
+  //     setActive("join");
+  //   } else {
+  //     database.ref(`/users/${userId}`).update({
+  //       currentTable: table.id,
+  //     });
+  //     setIsRedirect(true);
+  //   }
+  // };
 
-  const handleEnterPassword = () => {
-    if (password === joiningTable.password) {
-      database.ref(`/users/${userId}`).update({
-        currentTable: joiningTable.id,
-      });
-      setIsRedirect(true);
-    } else {
-      setIsError(true);
-    }
-  };
+  // const handleEnterPassword = () => {
+  //   if (password === joiningTable.password) {
+  //     database.ref(`/users/${userId}`).update({
+  //       currentTable: joiningTable.id,
+  //     });
+  //     setIsRedirect(true);
+  //   } else {
+  //     setIsError(true);
+  //   }
+  // };
 
-  const handleDelete = (table) => {
-    database.ref(`/games/${table.id}`).remove();
-  };
+  // const handleDelete = (table) => {
+  //   database.ref(`/games/${table.id}`).remove();
+  // };
 
-  if (isRedirect) return <Redirect to={`/tables/${joiningTable.id}`} />;
+  // if (isRedirect) return <Redirect to={`/tables/${joiningTable.id}`} />;
 
   return (
     <Container>
@@ -266,16 +287,19 @@ function Tables({ userId }) {
             nickname={nickname}
             balance={balance}
             avatarId={avatarId}
-            active={active}
-            setActive={setActive}
-            allTablesLength={allTables.length}
-            publicTablesLength={publicTables.length}
-            officialTablesLength={officialTables.length}
-            privateTablesLength={privateTables.length}
-            hasTable={hasTable}
+            // active={active}
+            // setActive={setActive}
+            // allTablesLength={allTables.length}
+            // publicTablesLength={publicTables.length}
+            // officialTablesLength={officialTables.length}
+            // privateTablesLength={privateTables.length}
+            // hasTable={hasTable}
           />
           <Content>
-            <>
+            <Tile to="play">
+              <Paragraph>Play</Paragraph>
+            </Tile>
+            {/* <>
               {active === "all tables" && (
                 <List>
                   {allTables.map(
@@ -482,7 +506,7 @@ function Tables({ userId }) {
               {active === "create table" && (
                 <CreateForm setActive={setActive} nickname={nickname} />
               )}
-            </>
+            </> */}
           </Content>
         </Wrapper>
       )}
