@@ -12,10 +12,10 @@ const Appear = keyframes`
 
 const Score = styled.p`
   position: absolute;
-  bottom: -4.9rem;
   font-family: "Montserrat", sans-serif;
   font-size: 2.1rem;
   font-weight: 500;
+  min-width: 5.5rem;
   margin: 1rem 0.5rem 0;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.21);
@@ -39,6 +39,15 @@ const Score = styled.p`
     border-bottom: 0.8rem solid rgba(0, 0, 0, 0.21);
     transition: border-bottom-color 0.15s ease-in-out;
   }
+
+  ${({ player }) =>
+    player
+      ? css`
+          bottom: 14rem;
+        `
+      : css`
+          top: 28rem;
+        `}
 
   ${({ isStand }) =>
     isStand &&

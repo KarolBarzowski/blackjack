@@ -41,16 +41,6 @@ export const deal = (deck) => {
   return card;
 };
 
-export const getCardValue = (value, score) => {
-  if (typeof value === "string") {
-    score += 10;
-  } else {
-    score += value;
-  }
-
-  return score;
-};
-
 export const getAvatar = (id) => {
   switch (id) {
     case 0:
