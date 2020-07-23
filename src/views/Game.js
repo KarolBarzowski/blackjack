@@ -463,6 +463,7 @@ function Game({ userId }) {
   }, [dealerHand, isStand]);
 
   const handleDeal = (destination, isFlipped = false) => {
+    setIsDisabled(true);
     const card = deal(deck);
 
     if (destination === "player") {
@@ -472,6 +473,10 @@ function Game({ userId }) {
       setIsFlippedDealer((prevFlipped) => [...prevFlipped, isFlipped]);
       setDealerHand((prevHand) => [...prevHand, card]);
     }
+
+    setTimeout(() => {
+      setIsDisabled(false);
+    }, 1250);
   };
 
   const handleBet = (bet) => {
@@ -658,7 +663,7 @@ function Game({ userId }) {
       <Controls ref={decisionControlsRef}>
         <Button
           type="button"
-          // onClick={() => handleBet(min)}
+          onClick={() => handleDeal("player")}
           disabled={isDisabled}
         >
           HIT
