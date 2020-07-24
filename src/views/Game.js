@@ -176,6 +176,7 @@ function Game({ userId }) {
   const decisionControlsRef = useRef(null);
   const playerHandRef = useRef(null);
   const dealerHandRef = useRef(null);
+  const stakeRef = useRef(null);
 
   const [min, setMin] = useState(1);
   const [max, setMax] = useState(300);
@@ -242,8 +243,13 @@ function Game({ userId }) {
   useEffect(() => {
     // check if player bankrupted
     if (!isGame) {
-      if (balance <= 0) setIsBankrupt(true);
-      else setIsBankrupt(false);
+      if (balance <= 0) {
+        setIsBankrupt(true);
+        setIsDisabled(true);
+      } else {
+        setIsBankrupt(false);
+        setIsDisabled(false);
+      }
     }
 
     setIsAllIn(balance <= max);
@@ -252,7 +258,7 @@ function Game({ userId }) {
     setCanDoubleDown(balance - stake * 2 >= 0);
 
     // update balance in database
-    if (userId && balance) {
+    if (userId && balance !== null) {
       const ref = database.ref(`/users/${userId}`);
       ref.update({ balance });
     }
@@ -269,9 +275,6 @@ function Game({ userId }) {
     if (!isLoading) {
       gsap.defaults({ ease: "power2.inOut", duration: 0.75 });
 
-      const stakeRef =
-        betControlsRef.current.children[2].children[2].children[1];
-
       switch (currentAction) {
         case "bet":
           gsap
@@ -286,7 +289,7 @@ function Game({ userId }) {
             .timeline()
             .to(betControlsRef.current, { y: 200 })
             .to(leaveRef.current, { x: -200 }, 0)
-            .to(stakeRef, { y: -200, x: "50%" }, 1)
+            .to(stakeRef.current, { y: -200, x: "50%" }, 1)
             .to(decisionControlsRef.current, { y: -45 })
             .call(
               () => {
@@ -325,6 +328,92 @@ function Game({ userId }) {
           setIsAnimating(true);
           setIsDisabled(true);
 
+          if (winner === "player") {
+            setBalance(
+              (prevBalance) =>
+                prevBalance +
+                parseFloat(stake) +
+                parseFloat(stake) * (isBlackjack ? 1.5 : 1)
+            );
+          } else if (isDraw) {
+            setBalance((prevBalance) => prevBalance + parseFloat(stake));
+          }
+
+          const tl = gsap.timeline();
+
+          if (!isStand) {
+            tl.to(decisionControlsRef.current, {
+              y: 200,
+            });
+          }
+
+          Array.from(playerHandRef.current.children).forEach((child, i) => {
+            tl.to(
+              playerHandRef.current.children[i],
+              {
+                x: `-=${55 * i}`,
+                rotate: 0,
+              },
+              0
+            );
+          });
+
+          Array.from(dealerHandRef.current.children).forEach((child, i) => {
+            tl.to(
+              dealerHandRef.current.children[i],
+              {
+                x: `-=${55 * i}`,
+                rotate: 0,
+              },
+              0
+            );
+          });
+
+          tl.to(
+            [
+              ...playerHandRef.current.children,
+              ...dealerHandRef.current.children,
+            ],
+            {
+              x: 144,
+              y: -250,
+              duration: 1,
+            }
+          )
+            .call(() => {
+              setPlayerHand([]);
+              setDealerHand([]);
+              setIsFlippedPlayer([]);
+              setIsFlippedDealer([]);
+              setIsStand(false);
+              setIsEnd(false);
+              setIsAcePlayer(false);
+              setPlayerScore(0);
+              setPrevPlayerScore(0);
+              setPrevPlayerTotalScore(0);
+              setPlayerTotalScore(0);
+              setIsAceDealer(false);
+              setDealerScore(0);
+              setDealerTotalScore(0);
+              setPrevDealerScore(0);
+              setPrevDealerTotalScore(0);
+              setStake(min);
+            })
+            .to(leaveRef.current, { x: 0 })
+            .to(stakeRef.current, { y: 0, x: 0 })
+            .call(
+              () => {
+                setIsDraw(false);
+                setIsBlackjack(false);
+                setWinner(null);
+                setCurrentAction("bet");
+                setIsDisabled(false);
+                setIsAnimating(false);
+                setIsGame(false);
+              },
+              null,
+              "-=0.75"
+            );
           break;
 
         default:
@@ -391,6 +480,7 @@ function Game({ userId }) {
           break;
       }
     }
+
     setTimeout(() => {
       setWinner(whoWin);
     }, 500);
@@ -562,19 +652,20 @@ function Game({ userId }) {
 
   // stand mechanism
   useEffect(() => {
-    console.log("1");
     if (isStand) {
-      console.log("2");
-      if (dealerScore <= 16 && dealerTotalScore <= 16 && !isAnimating) {
-        console.log("3");
+      if (
+        (dealerScore <= 16 || dealerTotalScore <= 16) &&
+        dealerTotalScore <= 21 &&
+        !isAnimating
+      ) {
         setIsAnimating(true);
-
-        setTimeout(() => {
-          handleDeal("dealer", true);
-        }, 500);
+        handleDeal("dealer", true);
       }
 
-      if (dealerScore >= 17 || dealerTotalScore >= 17) {
+      if (
+        dealerScore >= 17 ||
+        (dealerTotalScore >= 17 && dealerTotalScore <= 21)
+      ) {
         setIsEnd(true);
       }
     }
@@ -584,9 +675,16 @@ function Game({ userId }) {
 
   useEffect(() => {
     if (winner || isDraw) {
-      setCurrentAction("win");
+      if (isStand) {
+        setCurrentAction("win");
+      } else {
+        setIsFlippedDealer([false, false]);
+        setTimeout(() => {
+          setCurrentAction("win");
+        }, 1000);
+      }
     }
-  }, [winner, isDraw]);
+  }, [winner, isDraw, isStand]);
 
   const handleDeal = (destination, isFlipped = false) => {
     setIsDisabled(true);
@@ -626,9 +724,12 @@ function Game({ userId }) {
   const handleDoubleDown = () => {
     setIsDisabled(true);
     setBalance(balance - stake * 2);
-    // todo
-    // handleDeal("player");
-    // handleStand();
+    setStake(stake * 2);
+    handleDeal("player");
+
+    setTimeout(() => {
+      handleStand();
+    }, 1251);
   };
 
   return isLoading ? (
@@ -772,7 +873,7 @@ function Game({ userId }) {
             >
               <Icon icon={faMinus} />
             </ButtonIcon>
-            <Value>${stake}</Value>
+            <Value ref={stakeRef}>${stake}</Value>
             <ButtonIcon
               type="button"
               disabled={parseFloat(stake) >= (isAllIn ? balance : max)}

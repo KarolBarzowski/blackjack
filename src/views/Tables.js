@@ -15,6 +15,7 @@ import Sidebar from "components/Sidebar";
 import Paragraph from "components/Paragraph";
 import Heading from "components/Heading";
 import CreateForm from "components/CreateForm";
+import Bank from "components/Bank";
 
 const Container = styled.div`
   display: flex;
@@ -193,14 +194,23 @@ function Tables({ userId }) {
         .ref(`/users/${userId}`)
         .once("value")
         .then((snapshot) => {
-          const { nickname, balance, avatarId } = snapshot.val();
+          const { nickname, avatarId } = snapshot.val();
 
           setNickname(nickname);
-          setBalance(balance);
           setAvatarId(avatarId);
           setIsLoading(false);
         });
+
+      database
+        .ref(`/users/${userId}/balance`)
+        .on("value", (snapshot) => setBalance(snapshot.val()));
     }
+
+    return () => {
+      database
+        .ref(`/users/${userId}/balance`)
+        .off("value", (snapshot) => setBalance(snapshot.val()));
+    };
   }, [setIsLoading, userId]);
 
   useEffect(() => {
@@ -229,11 +239,7 @@ function Tables({ userId }) {
                 <Paragraph>Play</Paragraph>
               </Tile>
             )}
-            {active === "bank" && (
-              <Tile>
-                <Paragraph>Bank</Paragraph>
-              </Tile>
-            )}
+            {active === "bank" && <Bank userId={userId} />}
           </Content>
         </Wrapper>
       )}

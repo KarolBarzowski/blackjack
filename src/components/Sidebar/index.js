@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled, { css } from "styled-components";
-import { getAvatar } from "helpers/functions";
+import { getAvatar, getLabel } from "helpers/functions";
 import { auth } from "helpers/firebase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -65,6 +65,7 @@ const ListItem = styled.li`
   height: 6.4rem;
   width: 100%;
   margin: 0.5rem 0;
+  cursor: pointer;
 `;
 
 const Button = styled.button`
@@ -141,7 +142,7 @@ function Sidebar({
         <Avatar>{getAvatar(avatarId)}</Avatar>
         <Column>
           <Paragraph>{nickname}</Paragraph>
-          <StyledParagraph>${balance}</StyledParagraph>
+          <StyledParagraph>${getLabel(balance)}</StyledParagraph>
         </Column>
         <ButtonIcon
           type="button"
