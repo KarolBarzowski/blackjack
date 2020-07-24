@@ -1512,3 +1512,6 @@ Single.defaultProps = {
 };
 
 export default Single;
+
+// todo: liczenie punktow dla dealera po stand
+// todo: mysle ze warto zrobic delay w countUp i zrezygnowac z settimeoutow bo tylko psuja pozniejsze funkcje!

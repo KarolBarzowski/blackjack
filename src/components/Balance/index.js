@@ -86,7 +86,7 @@ const Balance = forwardRef(({ start, end }, ref) => {
     <Wrapper ref={ref}>
       <Tooltip hide={isTooltipHidden}>Balance:</Tooltip>
       $
-      <CountUp start={start} end={end} duration={1.75} delay={0} />
+      <CountUp start={start || 0} end={end || 0} duration={1.75} delay={0} />
     </Wrapper>
   );
 });
