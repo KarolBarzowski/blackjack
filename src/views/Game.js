@@ -470,6 +470,15 @@ function Game({ userId }) {
         case playerScore === dealerScore &&
           playerTotalScore < 21 &&
           dealerTotalScore < 21:
+        case playerTotalScore === dealerTotalScore &&
+          playerTotalScore < 21 &&
+          dealerTotalScore < 21:
+        case dealerTotalScore === playerScore &&
+          dealerTotalScore < 21 &&
+          playerScore < 21:
+        case playerTotalScore === dealerScore &&
+          playerTotalScore < 21 &&
+          dealerScore < 21:
           whoWin = null;
           setTimeout(() => {
             setIsDraw(true);
