@@ -285,6 +285,7 @@ function Login() {
               nickname: nick,
               balance: 1000,
               avatarId: Math.floor(Math.random() * 4),
+              debt: 0,
             });
             setIsValidating(false);
           })
