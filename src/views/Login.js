@@ -283,7 +283,7 @@ function Login() {
           .then(() => {
             database.ref(`users/${auth.currentUser.uid}`).set({
               nickname: nick,
-              balance: 200,
+              balance: 1000,
               avatarId: Math.floor(Math.random() * 4),
             });
             setIsValidating(false);
