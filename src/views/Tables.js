@@ -13,6 +13,7 @@ import Sidebar from 'components/Sidebar';
 import Paragraph from 'components/Paragraph';
 import Bank from 'components/Bank';
 import Button from 'components/Button';
+import Leaderboard from 'components/Leaderboard';
 
 const Container = styled.div`
   display: flex;
@@ -159,6 +160,7 @@ function Tables({ userId }) {
                 </Tile>
               ))}
             {active === 'bank' && <Bank userId={userId} />}
+            {active === 'leaderboard' && <Leaderboard userId={userId} />}
           </Content>
         </Wrapper>
       )}

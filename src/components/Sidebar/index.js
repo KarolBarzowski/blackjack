@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components';
 import { getAvatar, getLabel } from 'helpers/functions';
 import { auth } from 'helpers/firebase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faPiggyBank, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPiggyBank, faSignOutAlt, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import Paragraph from 'components/Paragraph';
 
 const Wrapper = styled.div`
@@ -156,6 +156,18 @@ function Sidebar({ nickname, balance, avatarId, active, setActive }) {
               <Paragraph>
                 <FontAwesomeIcon icon={faPiggyBank} fixedWidth transform="left-5" />
                 Bank
+              </Paragraph>
+            </Button>
+          </ListItem>
+          <ListItem>
+            <Button
+              type="button"
+              onClick={() => setActive('leaderboard')}
+              active={active === 'leaderboard'}
+            >
+              <Paragraph>
+                <FontAwesomeIcon icon={faTrophy} fixedWidth transform="left-5" />
+                Leaderboard
               </Paragraph>
             </Button>
           </ListItem>
