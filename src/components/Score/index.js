@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from "styled-components";
+import styled, { css, keyframes } from 'styled-components';
 
 const Appear = keyframes`
     from {
@@ -12,7 +12,7 @@ const Appear = keyframes`
 
 const Score = styled.p`
   position: absolute;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.1rem;
   font-weight: 500;
   min-width: 5.5rem;
@@ -27,7 +27,7 @@ const Score = styled.p`
   animation: ${Appear} 0.15s ease-in-out forwards;
 
   ::before {
-    content: "";
+    content: '';
     position: absolute;
     top: -0.8rem;
     left: 50%;

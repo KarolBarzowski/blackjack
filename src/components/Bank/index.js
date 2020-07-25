@@ -1,33 +1,18 @@
-import React, { useState, useEffect } from "react";
-import styled, { css } from "styled-components";
-import { useHistory } from "react-router-dom";
-import { loans } from "helpers/data";
-import { getLabel } from "helpers/functions";
-import { auth, database } from "helpers/firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faLock, faLockOpen } from "@fortawesome/free-solid-svg-icons";
-import Heading from "components/Heading";
-import Paragraph from "components/Paragraph";
-import Button from "components/Button";
-
-const Form = styled.form`
-  display: flex;
-  flex-flow: column nowrap;
-  height: 100%;
-  width: 100%;
-`;
-
-const Label = styled.label`
-  position: relative;
-  display: flex;
-  flex-flow: column nowrap;
-`;
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import styled, { css } from 'styled-components';
+import { loans } from 'helpers/data';
+import { getLabel } from 'helpers/functions';
+import { database } from 'helpers/firebase';
+import Heading from 'components/Heading';
+import Paragraph from 'components/Paragraph';
+import Button from 'components/Button';
 
 const Input = styled.input`
   background-color: transparent;
   padding: 1rem;
   color: rgb(255, 255, 255, 0.87);
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.1rem;
   font-weight: 500;
   border-radius: 0.5rem;
@@ -83,6 +68,7 @@ const Tile = styled.button`
   :disabled {
     opacity: 0.38;
     cursor: default;
+    box-shadow: none;
   }
 
   ${({ highlight }) =>
@@ -127,25 +113,23 @@ function Bank({ userId }) {
   const [currentId, setCurrentId] = useState(null);
   const [value, setValue] = useState(0);
   const [isError, setIsError] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    database
-      .ref(`/users/${userId}/debt`)
-      .on("value", (snapshot) => setDebt(snapshot.val() || 0));
+    database.ref(`/users/${userId}/debt`).on('value', (snapshot) => setDebt(snapshot.val() || 0));
 
     database
       .ref(`/users/${userId}/balance`)
-      .on("value", (snapshot) => setBalance(snapshot.val() || 0));
+      .on('value', (snapshot) => setBalance(snapshot.val() || 0));
 
     return () => {
       database
         .ref(`/users/${userId}/debt`)
-        .off("value", (snapshot) => setDebt(snapshot.val() || 0));
+        .off('value', (snapshot) => setDebt(snapshot.val() || 0));
 
       database
         .ref(`/users/${userId}/balance`)
-        .off("value", (snapshot) => setBalance(snapshot.val() || 0));
+        .off('value', (snapshot) => setBalance(snapshot.val() || 0));
     };
   }, [userId]);
 
@@ -168,14 +152,14 @@ function Bank({ userId }) {
       },
       () => {
         handleCancel();
-      }
+      },
     );
   };
 
   const handlePay = () => {
     if (value <= 0) {
       setIsError(true);
-      setErrorMsg("Amount must be greater than 0!");
+      setErrorMsg('Amount must be greater than 0!');
     } else if (value > debt) {
       setIsError(true);
       setErrorMsg("Amount can't be greater than your debt!");
@@ -195,9 +179,7 @@ function Bank({ userId }) {
     <Wrapper>
       <StyledHeading>Bank</StyledHeading>
       <div>
-        <Paragraph>
-          {debt ? `Your debt: $${debt}` : `Currently you have no debt. 😎`}
-        </Paragraph>
+        <Paragraph>{debt ? `Your debt: $${debt}` : `Currently you have no debt. 😎`}</Paragraph>
         {debt ? (
           <Row>
             <Input
@@ -251,5 +233,9 @@ function Bank({ userId }) {
     </Wrapper>
   );
 }
+
+Bank.propTypes = {
+  userId: PropTypes.string.isRequired,
+};
 
 export default Bank;

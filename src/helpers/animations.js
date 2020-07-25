@@ -1,5 +1,5 @@
-import { keyframes } from "styled-components";
-import { gsap } from "gsap";
+import { keyframes } from 'styled-components';
+import { gsap } from 'gsap';
 
 export const SlideIn = keyframes`
   from {
@@ -59,9 +59,9 @@ export const animateDeal = (
   deckRef,
   handRef,
   handleFlipCard,
-  setIsAnimating
+  setIsAnimating,
 ) => {
-  gsap.defaults({ ease: "power3.inOut" });
+  gsap.defaults({ ease: 'power3.inOut' });
 
   const dealCard = (element) => {
     let deckPos = { right: 0, top: 0 };
@@ -81,7 +81,7 @@ export const animateDeal = (
       {
         x: deckPos.right - handPos.right,
         y: deckPos.top - handPos.top,
-        visibility: "visible",
+        visibility: 'visible',
       },
       {
         x: 55 * number,
@@ -89,7 +89,7 @@ export const animateDeal = (
         rotate: Math.random() < 0.5 ? 3 : -3,
         duration: 1.25,
       },
-      0
+      0,
     ).call(() => handleFlipCard(destination, number), null, 0.5);
 
     return tl;
@@ -112,7 +112,7 @@ export const slideInUp = (element) => {
       autoAlpha: 0,
       y: 200,
     },
-    { y: 0, autoAlpha: 1 }
+    { y: 0, autoAlpha: 1 },
   );
 
   return tl;
@@ -124,11 +124,11 @@ export const slideInRight = (element) => {
   tl.fromTo(
     element,
     {
-      x: "-=200px",
+      x: '-=200px',
     },
     {
       x: 0,
-    }
+    },
   );
 
   return tl;
@@ -143,7 +143,7 @@ export const slideOutDown = (element) => {
       autoAlpha: 1,
       y: 0,
     },
-    { y: 200, autoAlpha: 0 }
+    { y: 200, autoAlpha: 0 },
   );
 
   return tl;
@@ -158,8 +158,8 @@ export const slideOutLeft = (element) => {
       x: 0,
     },
     {
-      x: "-=200px",
-    }
+      x: '-=200px',
+    },
   );
 
   return tl;

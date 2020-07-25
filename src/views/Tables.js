@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from "react";
-import styled, { css } from "styled-components";
-import { Redirect, Link, withRouter, useHistory } from "react-router-dom";
-import queryString from "query-string";
-import { database } from "helpers/firebase";
-import { Appear } from "helpers/animations";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faSpinner,
-  faLock,
-  faLockOpen,
-  faCertificate,
-} from "@fortawesome/free-solid-svg-icons";
-import Sidebar from "components/Sidebar";
-import Paragraph from "components/Paragraph";
-import Heading from "components/Heading";
-import CreateForm from "components/CreateForm";
-import Bank from "components/Bank";
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import styled from 'styled-components';
+import { useHistory } from 'react-router-dom';
+import queryString from 'query-string';
+import { database } from 'helpers/firebase';
+import { Appear } from 'helpers/animations';
+import { getLabel } from 'helpers/functions';
+import { stakes } from 'helpers/data';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import Sidebar from 'components/Sidebar';
+import Paragraph from 'components/Paragraph';
+import Bank from 'components/Bank';
+import Button from 'components/Button';
 
 const Container = styled.div`
   display: flex;
@@ -34,141 +31,53 @@ const Wrapper = styled.div`
   background-color: ${({ theme }) => theme.dark};
   border-radius: 1.5rem;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.12),
-    0 4px 4px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.12),
-    0 16px 16px rgba(0, 0, 0, 0.12);
+    0 4px 4px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.12), 0 16px 16px rgba(0, 0, 0, 0.12);
   animation: ${Appear} 0.3s ease-in-out forwards;
 `;
 
 const Content = styled.div`
   display: flex;
-  flex-flow: column nowrap;
+  flex-flow: row nowrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   height: 100%;
   width: 100%;
   padding: 1.5rem 1rem;
 `;
 
-const List = styled.ul`
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-`;
-
-const ListItem = styled.li`
+const Tile = styled.button`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: column nowrap;
   align-items: center;
-  justify-content: space-between;
-  height: 6.4rem;
-  width: 100%;
-  padding: 1.5rem;
-  margin: 0 0 1.5rem;
-  background-color: ${({ theme }) => theme.backgroundSecondary};
-  border-radius: 1rem;
-  box-shadow: -0.3rem 0.3rem 5px rgba(0, 0, 0, 0.23);
-`;
-
-const StyledParagraph = styled(Paragraph)`
-  width: 25%;
-  text-align: center;
-`;
-
-const Icon = styled(FontAwesomeIcon)`
-  font-size: 2.4rem;
-`;
-
-const Button = styled.button`
-  height: 3.6rem;
-  padding: 0.5rem 1.5rem;
+  justify-content: space-around;
+  align-self: center;
+  height: 50%;
+  width: 30%;
+  padding: 3rem;
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.08);
   border: none;
-  border-radius: 0.5rem;
-  background-color: ${({ theme }) => theme.green};
+  border-radius: 3rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  transition: transform 0.15s ease-in-out;
   cursor: pointer;
-  transition: background-color 0.05s ease-in-out, opacity 0.15s ease-in-out;
-  outline: none;
 
-  :hover:not(:disabled) {
-    background-color: #12a537;
+  :hover:not(:disabled),
+  :focus {
+    transform: scale(1.05);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
   }
 
   :disabled {
     opacity: 0.38;
-    box-shadow: none;
     cursor: default;
-  }
-
-  ${({ orange }) =>
-    orange &&
-    css`
-      background-color: ${({ theme }) => theme.orange};
-
-      :hover:not(:disabled) {
-        background-color: #dd7d08;
-      }
-    `};
-
-  ${({ remove }) =>
-    remove &&
-    css`
-      background-color: ${({ theme }) => theme.red};
-      margin-right: 1.5rem;
-
-      :hover:not(:disabled) {
-        background-color: #ee3429;
-      }
-    `};
-`;
-
-const Center = styled.div`
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-`;
-
-const Input = styled.input`
-  background-color: transparent;
-  padding: 1rem;
-  color: rgb(255, 255, 255, 0.87);
-  font-family: "Montserrat", sans-serif;
-  font-size: 2.1rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  border: 1px solid rgb(99, 99, 102);
-  width: 32rem;
-  outline: none;
-  margin: 1.5rem 0;
-
-  ::placeholder {
-    color: rgb(99, 99, 102);
+    box-shadow: none;
   }
 `;
 
-const Error = styled(Paragraph)`
-  color: ${({ theme }) => theme.red};
-  margin: 0 0 1.5rem 0;
-`;
-
-const Tile = styled(Link)`
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  align-self: center;
-  height: 80%;
-  width: 80%;
-  padding: 3rem;
-  text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 3rem;
-  transition: transform 0.15s ease-in-out;
-
-  :hover {
-    transform: scale(1.05);
-  }
+const StyledParagraph = styled(Paragraph)`
+  font-size: 1.6rem;
+  color: ${({ theme }) => theme.textSecondary};
 `;
 
 function Tables({ userId }) {
@@ -176,23 +85,14 @@ function Tables({ userId }) {
   const [nickname, setNickname] = useState(null);
   const [balance, setBalance] = useState(null);
   const [avatarId, setAvatarId] = useState(null);
-  const [hasTable, setHasTable] = useState(0);
-  const [active, setActive] = useState("play");
-  const [allTables, setAllTables] = useState([]);
-  const [publicTables, setPublicTables] = useState([]);
-  const [officialTables, setOfficialTables] = useState([]);
-  const [privateTables, setPrivateTables] = useState([]);
-  const [joiningTable, setJoiningTable] = useState(null);
-  const [password, setPassword] = useState("");
-  const [isError, setIsError] = useState(false);
-  const [isRedirect, setIsRedirect] = useState(false);
+  const [active, setActive] = useState('play');
   const history = useHistory();
 
   useEffect(() => {
     if (userId) {
       database
         .ref(`/users/${userId}`)
-        .once("value")
+        .once('value')
         .then((snapshot) => {
           const { nickname, avatarId } = snapshot.val();
 
@@ -203,13 +103,13 @@ function Tables({ userId }) {
 
       database
         .ref(`/users/${userId}/balance`)
-        .on("value", (snapshot) => setBalance(snapshot.val()));
+        .on('value', (snapshot) => setBalance(snapshot.val()));
     }
 
     return () => {
       database
         .ref(`/users/${userId}/balance`)
-        .off("value", (snapshot) => setBalance(snapshot.val()));
+        .off('value', (snapshot) => setBalance(snapshot.val()));
     };
   }, [setIsLoading, userId]);
 
@@ -219,6 +119,13 @@ function Tables({ userId }) {
       setActive(active);
     }
   }, [history]);
+
+  const handlePlay = (id) => {
+    window.localStorage.setItem('min', stakes[id][0]);
+    window.localStorage.setItem('max', stakes[id][1]);
+
+    history.push('/play');
+  };
 
   return (
     <Container>
@@ -234,17 +141,37 @@ function Tables({ userId }) {
             setActive={setActive}
           />
           <Content>
-            {active === "play" && (
-              <Tile to="play">
-                <Paragraph>Play</Paragraph>
-              </Tile>
-            )}
-            {active === "bank" && <Bank userId={userId} />}
+            {active === 'play' &&
+              stakes.map((stake, i) => (
+                <Tile
+                  type="button"
+                  onClick={() => handlePlay(i)}
+                  disabled={balance < stake[0]}
+                  key={i.toString()}
+                >
+                  <div>
+                    <StyledParagraph>Stakes</StyledParagraph>
+                    <Paragraph>
+                      ${getLabel(stake[0])} - ${getLabel(stake[1])}
+                    </Paragraph>
+                  </div>
+                  <Button as={Paragraph}>Play</Button>
+                </Tile>
+              ))}
+            {active === 'bank' && <Bank userId={userId} />}
           </Content>
         </Wrapper>
       )}
     </Container>
   );
 }
+
+Tables.propTypes = {
+  userId: PropTypes.string,
+};
+
+Tables.defaultProps = {
+  userId: null,
+};
 
 export default Tables;

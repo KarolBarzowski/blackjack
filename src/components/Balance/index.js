@@ -1,8 +1,9 @@
-import React, { useState, useEffect, forwardRef } from "react";
-import styled, { keyframes } from "styled-components";
-import CountUp from "react-countup";
-import { SlideInLeft } from "helpers/animations";
-import Paragraph from "components/Paragraph";
+import React, { useState, useEffect, forwardRef } from 'react';
+import PropTypes from 'prop-types';
+import styled, { keyframes } from 'styled-components';
+import CountUp from 'react-countup';
+import { SlideInLeft } from 'helpers/animations';
+import Paragraph from 'components/Paragraph';
 
 const Disappear = keyframes`
   from {
@@ -55,7 +56,7 @@ const Wrapper = styled(Paragraph)`
     ${BorderDelay} 0.15s ease-in-out 5s backwards;
 
   ::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -90,5 +91,15 @@ const Balance = forwardRef(({ start, end }, ref) => {
     </Wrapper>
   );
 });
+
+Balance.propTypes = {
+  start: PropTypes.number,
+  end: PropTypes.number,
+};
+
+Balance.defaultProps = {
+  start: 0,
+  end: 0,
+};
 
 export default Balance;

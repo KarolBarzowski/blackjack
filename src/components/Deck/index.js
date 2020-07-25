@@ -1,6 +1,6 @@
-import React from "react";
-import styled from "styled-components";
-import Reverse from "components/Reverse";
+import React from 'react';
+import styled from 'styled-components';
+import Reverse from 'components/Reverse';
 
 const Wrapper = styled.div`
   position: absolute;
@@ -14,7 +14,7 @@ const Wrapper = styled.div`
   border-radius: 0 1rem 1rem 0;
 
   ::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 1.05rem;
     left: -2.1rem;
@@ -25,18 +25,14 @@ const Wrapper = styled.div`
   }
 
   ::after {
-    content: "";
+    content: '';
     position: absolute;
     bottom: -2.1rem;
     left: -1.05rem;
     height: 2.1rem;
     width: calc(100% - 0.8rem);
     background: rgb(255, 255, 255);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 1) 0%,
-      rgba(174, 174, 178, 1) 5%
-    );
+    background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(174, 174, 178, 1) 5%);
     transform: rotate(0deg) skewX(-45deg);
   }
 `;

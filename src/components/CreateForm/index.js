@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import styled, { css } from "styled-components";
-import { useHistory } from "react-router-dom";
-import Heading from "components/Heading";
-import Paragraph from "components/Paragraph";
-import { stakesLabels, stakes } from "helpers/data";
-import { auth, database } from "helpers/firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faLock, faLockOpen } from "@fortawesome/free-solid-svg-icons";
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import styled, { css } from 'styled-components';
+import Heading from 'components/Heading';
+import Paragraph from 'components/Paragraph';
+import { stakesLabels, stakes } from 'helpers/data';
+import { auth, database } from 'helpers/firebase';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 
 const StyledHeading = styled(Heading)`
   margin: 0;
@@ -29,7 +29,7 @@ const Input = styled.input`
   background-color: transparent;
   padding: 1rem;
   color: rgb(255, 255, 255, 0.87);
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 2.1rem;
   font-weight: 500;
   border-radius: 0.5rem;
@@ -77,7 +77,7 @@ const Button = styled.button`
   font-size: 1.6rem;
   font-weight: 500;
   color: ${({ theme }) => theme.textSecondary};
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   background-color: rgba(0, 132, 255, 0.34);
   cursor: pointer;
   outline: none;
@@ -119,15 +119,12 @@ const Button = styled.button`
     `};
 `;
 
-function CreateForm({ setActive, nickname }) {
+function CreateForm({ nickname }) {
   const [name, setName] = useState(`${nickname}'s table`);
-  const [defaultName, setDefaultName] = useState(`${nickname}'s table`);
-  const [isOpen, setIsOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [stake, setStake] = useState(0);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const history = useHistory();
 
   const handleNameChange = (e) => {
     if (e.target.value.length <= 30) {
@@ -141,7 +138,7 @@ function CreateForm({ setActive, nickname }) {
 
     const userId = auth.currentUser.uid;
 
-    const gamesRef = database.ref("/games");
+    const gamesRef = database.ref('/games');
     const userRef = database.ref(`/users/${userId}`);
 
     const newGame = gamesRef.push();
@@ -166,7 +163,7 @@ function CreateForm({ setActive, nickname }) {
             currentTable: newGame.key,
           });
         }
-      }
+      },
     );
   };
 
@@ -177,7 +174,7 @@ function CreateForm({ setActive, nickname }) {
         <StyledParagraph>Table name</StyledParagraph>
         <Input
           type="text"
-          placeholder={defaultName}
+          placeholder={`${nickname}'s table`}
           value={name}
           onChange={(e) => handleNameChange(e)}
         />
@@ -188,30 +185,18 @@ function CreateForm({ setActive, nickname }) {
       <StyledParagraph>Stakes</StyledParagraph>
       <Row>
         {stakesLabels.map((text, i) => (
-          <Button
-            type="button"
-            active={stake === i}
-            onClick={() => setStake(i)}
-          >
+          <Button type="button" active={stake === i} onClick={() => setStake(i)}>
             {text}
           </Button>
         ))}
       </Row>
       <StyledParagraph>Type</StyledParagraph>
       <Row>
-        <Button
-          type="button"
-          active={!isPrivate}
-          onClick={() => setIsPrivate(false)}
-        >
+        <Button type="button" active={!isPrivate} onClick={() => setIsPrivate(false)}>
           <FontAwesomeIcon icon={faLockOpen} transform="left-10" />
           Public
         </Button>
-        <Button
-          type="button"
-          active={isPrivate}
-          onClick={() => setIsPrivate(true)}
-        >
+        <Button type="button" active={isPrivate} onClick={() => setIsPrivate(true)}>
           <FontAwesomeIcon icon={faLock} transform="left-10" />
           Private
         </Button>
@@ -238,5 +223,9 @@ function CreateForm({ setActive, nickname }) {
     </Form>
   );
 }
+
+CreateForm.propTypes = {
+  nickname: PropTypes.string.isRequired,
+};
 
 export default CreateForm;

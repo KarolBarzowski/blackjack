@@ -1,29 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
-import styled, { css } from "styled-components";
-import { withRouter, Redirect, Link } from "react-router-dom";
-import { gsap } from "gsap";
-import { database, auth } from "helpers/firebase";
-import { createDeck, shuffleDeck, deal } from "helpers/functions";
-import { FadeIn } from "helpers/animations";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faMinus,
-  faPlus,
-} from "@fortawesome/free-solid-svg-icons";
-import backgroundPattern from "assets/images/bg.png";
-import { ReactComponent as Text } from "assets/images/text.svg";
-import CountUp from "react-countup";
-import Paragraph from "components/Paragraph";
-import Loading from "components/Loading";
-import Button from "components/Button";
-import Deck from "components/Deck";
-import Balance from "components/Balance";
-import Modal from "components/Modal";
-import ButtonIcon from "components/ButtonIcon";
-import Card from "components/Card";
-import Score from "components/Score";
-import Winner from "components/Winner";
+import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
+import styled from 'styled-components';
+import { Link, useHistory } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { database } from 'helpers/firebase';
+import { createDeck, shuffleDeck, deal, getLabel } from 'helpers/functions';
+import { FadeIn } from 'helpers/animations';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import backgroundPattern from 'assets/images/bg.png';
+import { ReactComponent as Text } from 'assets/images/text.svg';
+import CountUp from 'react-countup';
+import Paragraph from 'components/Paragraph';
+import Loading from 'components/Loading';
+import Button from 'components/Button';
+import Deck from 'components/Deck';
+import Balance from 'components/Balance';
+import Modal from 'components/Modal';
+import ButtonIcon from 'components/ButtonIcon';
+import Card from 'components/Card';
+import Score from 'components/Score';
+import Winner from 'components/Winner';
+import Chat from 'components/Chat';
 
 const Wrapper = styled.div`
   position: relative;
@@ -110,7 +108,7 @@ const SliderContainer = styled.div`
   align-items: center;
 
   ::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -161,8 +159,7 @@ const Value = styled(Paragraph)`
   text-align: center;
   background-color: rgba(0, 0, 0, 0.21);
   border-radius: 0.5rem;
-  padding: 0.3rem 0;
-  min-width: 7rem;
+  padding: 0.4rem 0.8rem;
   z-index: 2;
 `;
 
@@ -186,7 +183,7 @@ function Game({ userId }) {
   const [prevBalance, setPrevBalance] = useState(0);
   const [balance, setBalance] = useState(null);
   const [isBankrupt, setIsBankrupt] = useState(false);
-  const [currentAction, setCurrentAction] = useState("bet");
+  const [currentAction, setCurrentAction] = useState('bet');
   const [isAllIn, setIsAllIn] = useState(false);
   const [canDoubleBet, setCanDoubleBet] = useState(false);
   const [canRepeatBet, setCanRepeatBet] = useState(false);
@@ -214,16 +211,48 @@ function Game({ userId }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isEnd, setIsEnd] = useState(false);
   const [isBlackjack, setIsBlackjack] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const history = useHistory();
+
+  useEffect(() => {
+    const minStake = parseFloat(window.localStorage.getItem('min')) || 1;
+    const maxStake = parseFloat(window.localStorage.getItem('max')) || 300;
+
+    switch (true) {
+      case minStake === 1:
+      case minStake === 500:
+      case minStake === 3000:
+        setMin(minStake);
+        setStake(minStake);
+        break;
+
+      default:
+        history.push('/');
+        break;
+    }
+
+    switch (true) {
+      case maxStake === 300:
+      case maxStake === 1500:
+      case maxStake === 9000:
+        setMax(maxStake);
+        break;
+
+      default:
+        history.push('/');
+        break;
+    }
+  }, [history]);
 
   useEffect(() => {
     const handleDisableTab = (e) => {
       if (e.which === 9 || e.keyCode === 9) e.preventDefault();
     };
 
-    document.addEventListener("keydown", handleDisableTab);
+    document.addEventListener('keydown', handleDisableTab);
 
     return () => {
-      document.removeEventListener("keydown", handleDisableTab);
+      document.removeEventListener('keydown', handleDisableTab);
     };
   }, []);
 
@@ -232,7 +261,7 @@ function Game({ userId }) {
     if (userId) {
       const ref = database.ref(`/users/${userId}/balance`);
 
-      ref.once("value").then((snapshot) => {
+      ref.once('value').then((snapshot) => {
         setBalance(snapshot.val());
         setIsLoading(false);
       });
@@ -255,7 +284,7 @@ function Game({ userId }) {
     setIsAllIn(balance <= max);
     setCanDoubleBet(balance - lastStake * 2 >= 0 && lastStake * 2 <= max);
     setCanRepeatBet(balance - lastStake >= 0 && lastStake <= max);
-    setCanDoubleDown(balance - stake * 2 >= 0);
+    setCanDoubleDown(balance - stake >= 0);
 
     // update balance in database
     if (userId && balance !== null) {
@@ -273,10 +302,14 @@ function Game({ userId }) {
   // listen for action change
   useEffect(() => {
     if (!isLoading) {
-      gsap.defaults({ ease: "power2.inOut", duration: 0.75 });
+      const date = new Date();
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+
+      gsap.defaults({ ease: 'power2.inOut', duration: 0.75 });
 
       switch (currentAction) {
-        case "bet":
+        case 'bet':
           gsap
             .timeline()
             .to(decisionControlsRef.current, { y: 200 })
@@ -284,34 +317,34 @@ function Game({ userId }) {
 
           break;
 
-        case "decision":
+        case 'decision':
           gsap
             .timeline()
             .to(betControlsRef.current, { y: 200 })
             .to(leaveRef.current, { x: -200 }, 0)
-            .to(stakeRef.current, { y: -200, x: "50%" }, 1)
+            .to(stakeRef.current, { y: -200, x: '50%' }, 1)
             .to(decisionControlsRef.current, { y: -45 })
             .call(
               () => {
                 setIsDisabled(false);
               },
               null,
-              5
+              5,
             );
 
-          handleDeal("player");
+          handleDeal('player');
           setTimeout(() => {
-            handleDeal("dealer", true);
+            handleDeal('dealer', true);
             setTimeout(() => {
-              handleDeal("player");
+              handleDeal('player');
               setTimeout(() => {
-                handleDeal("dealer", true);
+                handleDeal('dealer', true);
               }, 1250);
             }, 1250);
           }, 1250);
           break;
 
-        case "stand":
+        case 'stand':
           setIsDisabled(true);
 
           setIsAnimating(true);
@@ -324,21 +357,42 @@ function Game({ userId }) {
 
           break;
 
-        case "win":
+        case 'win':
           setIsAnimating(true);
           setIsDisabled(true);
 
-          if (winner === "player") {
+          if (winner === 'player') {
             setBalance(
               (prevBalance) =>
-                prevBalance +
-                parseFloat(stake) +
-                parseFloat(stake) * (isBlackjack ? 1.5 : 1)
+                prevBalance + parseFloat(stake) + parseFloat(stake) * (isBlackjack ? 1.5 : 1),
             );
           } else if (isDraw) {
             setBalance((prevBalance) => prevBalance + parseFloat(stake));
           }
 
+          setLogs((prevLogs) => [
+            ...prevLogs,
+            {
+              time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
+              msg: `Dealer ${isAceDealer ? dealerTotalScore : dealerScore}: ${dealerHand
+                .map(({ value, suit }) => `${value}${suit} `)
+                .join(' ')}`,
+            },
+            {
+              time: `${hour}:${minute < 10 ? `0${minute}` : minute}`,
+              msg: isDraw
+                ? `Draw! Your hand ${
+                    isAcePlayer ? playerTotalScore : playerScore
+                  }: ${playerHand.map(({ value, suit }) => `${value}${suit}`).join(' ')}`
+                : `You ${winner === 'player' ? 'won' : 'lost'} $${
+                    isBlackjack ? getLabel(stake * 1.5) : getLabel(stake)
+                  } with ${isAcePlayer ? playerTotalScore : playerScore}: ${playerHand
+                    .map(({ value, suit }) => `${value}${suit}`)
+                    .join(' ')}`,
+            },
+          ]);
+
+          // eslint-disable-next-line
           const tl = gsap.timeline();
 
           if (!isStand) {
@@ -354,7 +408,7 @@ function Game({ userId }) {
                 x: `-=${55 * i}`,
                 rotate: 0,
               },
-              0
+              0,
             );
           });
 
@@ -365,55 +419,48 @@ function Game({ userId }) {
                 x: `-=${55 * i}`,
                 rotate: 0,
               },
-              0
+              0,
             );
           });
 
-          tl.to(
-            [
-              ...playerHandRef.current.children,
-              ...dealerHandRef.current.children,
-            ],
-            {
-              x: 144,
-              y: -250,
-              duration: 1,
-            }
-          )
-            .call(() => {
-              setPlayerHand([]);
-              setDealerHand([]);
-              setIsFlippedPlayer([]);
-              setIsFlippedDealer([]);
-              setIsStand(false);
-              setIsEnd(false);
-              setIsAcePlayer(false);
-              setPlayerScore(0);
-              setPrevPlayerScore(0);
-              setPrevPlayerTotalScore(0);
-              setPlayerTotalScore(0);
-              setIsAceDealer(false);
-              setDealerScore(0);
-              setDealerTotalScore(0);
-              setPrevDealerScore(0);
-              setPrevDealerTotalScore(0);
-              setStake(min);
-            })
+          tl.to([...playerHandRef.current.children, ...dealerHandRef.current.children], {
+            x: 144,
+            y: -250,
+            duration: 1,
+          })
             .to(leaveRef.current, { x: 0 })
             .to(stakeRef.current, { y: 0, x: 0 })
             .call(
               () => {
+                setIsGame(false);
+                setPlayerHand([]);
+                setDealerHand([]);
+                setIsFlippedPlayer([]);
+                setIsFlippedDealer([]);
+                setIsAcePlayer(false);
+                setPlayerScore(0);
+                setPrevPlayerScore(0);
+                setPlayerTotalScore(0);
+                setPrevPlayerTotalScore(0);
+                setIsAceDealer(false);
+                setDealerScore(0);
+                setDealerTotalScore(0);
+                setPrevDealerScore(0);
+                setPrevDealerTotalScore(0);
+                setStake(min);
+                setIsStand(false);
+                setIsEnd(false);
                 setIsDraw(false);
                 setIsBlackjack(false);
                 setWinner(null);
-                setCurrentAction("bet");
                 setIsDisabled(false);
                 setIsAnimating(false);
-                setIsGame(false);
+                setCurrentAction('bet');
               },
               null,
-              "-=0.75"
+              '-=0.75',
             );
+
           break;
 
         default:
@@ -427,72 +474,63 @@ function Game({ userId }) {
   // check if someone won
   useEffect(() => {
     let whoWin = null;
-
-    switch (true) {
-      case playerScore > 21:
-      case dealerScore === 21:
-      case dealerTotalScore === 21:
-        whoWin = "dealer";
-        break;
-      case dealerScore > 21:
-        whoWin = "player";
-        break;
-      case playerScore === 21 && dealerScore < 21:
-      case playerScore === 21 && dealerTotalScore < 21:
-      case playerTotalScore === 21 && dealerScore < 21:
-      case playerTotalScore === 21 && dealerTotalScore < 21:
-        whoWin = "player";
-        setIsBlackjack(true);
-        break;
-
-      default:
-        break;
-    }
-
-    if (isStand && isEnd) {
+    if (isGame) {
       switch (true) {
-        case playerScore > dealerScore && playerScore < 21 && !isAceDealer:
-        case playerScore > dealerTotalScore && playerScore < 21:
-        case playerTotalScore > dealerScore &&
-          playerTotalScore < 21 &&
-          !isAceDealer:
-        case playerTotalScore > dealerTotalScore && playerTotalScore < 21:
-          whoWin = "player";
+        case playerScore > 21:
+        case dealerScore === 21:
+        case dealerTotalScore === 21:
+          whoWin = 'dealer';
           break;
-        case dealerScore > playerScore && dealerScore < 21 && !isAcePlayer:
-        case dealerScore > playerTotalScore && dealerScore < 21:
-        case dealerTotalScore > playerScore &&
-          dealerTotalScore < 21 &&
-          !isAcePlayer:
-        case dealerTotalScore > playerTotalScore && dealerTotalScore < 21:
-          whoWin = "dealer";
+        case dealerScore > 21:
+          whoWin = 'player';
           break;
-        case playerScore === dealerScore &&
-          playerTotalScore < 21 &&
-          dealerTotalScore < 21:
-        case playerTotalScore === dealerTotalScore &&
-          playerTotalScore < 21 &&
-          dealerTotalScore < 21:
-        case dealerTotalScore === playerScore &&
-          dealerTotalScore < 21 &&
-          playerScore < 21:
-        case playerTotalScore === dealerScore &&
-          playerTotalScore < 21 &&
-          dealerScore < 21:
-          whoWin = null;
-          setTimeout(() => {
-            setIsDraw(true);
-          }, 500);
+        case playerScore === 21 && dealerScore < 21:
+        case playerScore === 21 && dealerTotalScore < 21:
+        case playerTotalScore === 21 && dealerScore < 21:
+        case playerTotalScore === 21 && dealerTotalScore < 21:
+          whoWin = 'player';
+          setIsBlackjack(true);
           break;
 
         default:
           break;
       }
-    }
 
-    setTimeout(() => {
-      setWinner(whoWin);
-    }, 500);
+      if (isStand && isEnd) {
+        switch (true) {
+          case playerScore > dealerScore && playerScore < 21 && !isAceDealer:
+          case playerScore > dealerTotalScore && playerScore < 21:
+          case playerTotalScore > dealerScore && playerTotalScore < 21 && !isAceDealer:
+          case playerTotalScore > dealerTotalScore && playerTotalScore < 21:
+            whoWin = 'player';
+            break;
+          case dealerScore > playerScore && dealerScore < 21 && !isAcePlayer:
+          case dealerScore > playerTotalScore && dealerScore < 21:
+          case dealerTotalScore > playerScore && dealerTotalScore < 21 && !isAcePlayer:
+          case dealerTotalScore > playerTotalScore && dealerTotalScore < 21:
+            whoWin = 'dealer';
+            break;
+          case playerScore === dealerScore && playerTotalScore < 21 && dealerTotalScore < 21:
+          case playerTotalScore === dealerTotalScore &&
+            playerTotalScore < 21 &&
+            dealerTotalScore < 21:
+          case dealerTotalScore === playerScore && dealerTotalScore < 21 && playerScore < 21:
+          case playerTotalScore === dealerScore && playerTotalScore < 21 && dealerScore < 21:
+            whoWin = null;
+            setTimeout(() => {
+              setIsDraw(true);
+            }, 500);
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      setTimeout(() => {
+        setWinner(whoWin);
+      }, 500);
+    }
 
     setTimeout(() => {
       setPrevPlayerScore(playerScore);
@@ -509,11 +547,12 @@ function Game({ userId }) {
     isEnd,
     isAceDealer,
     isAcePlayer,
+    isGame,
   ]);
 
   // animate player cards
   useEffect(() => {
-    if (playerHand.length) {
+    if (playerHand.length && isGame) {
       const deckPos = {
         x: window.innerWidth * 0.96 - 144,
         y: window.innerHeight * 0.1,
@@ -524,7 +563,7 @@ function Game({ userId }) {
         y: window.innerHeight - 432,
       };
 
-      gsap.defaults({ ease: "power2.inOut", duration: 1.25 });
+      gsap.defaults({ ease: 'power2.inOut', duration: 1.25 });
       gsap.set(playerHandRef.current.children[playerHand.length - 1], {
         x: deckPos.x,
         y: deckPos.y,
@@ -540,7 +579,7 @@ function Game({ userId }) {
             y: handPos.y,
             rotate: Math.random() < 0.5 ? 3 : -3,
           },
-          0
+          0,
         )
         .call(
           () => {
@@ -549,7 +588,7 @@ function Game({ userId }) {
             setIsFlippedPlayer(newArray);
           },
           null,
-          0.25
+          0.25,
         );
     }
 
@@ -558,7 +597,7 @@ function Game({ userId }) {
 
   // animate dealer cards
   useEffect(() => {
-    if (dealerHand.length) {
+    if (dealerHand.length && isGame) {
       const deckPos = {
         x: window.innerWidth * 0.96 - 144,
         y: window.innerHeight * 0.1,
@@ -569,7 +608,7 @@ function Game({ userId }) {
         y: 34,
       };
 
-      gsap.defaults({ ease: "power2.inOut", duration: 1.25 });
+      gsap.defaults({ ease: 'power2.inOut', duration: 1.25 });
       gsap.set(dealerHandRef.current.children[dealerHand.length - 1], {
         x: deckPos.x,
         y: deckPos.y,
@@ -585,17 +624,16 @@ function Game({ userId }) {
             y: handPos.y,
             rotate: Math.random() < 0.5 ? 3 : -3,
           },
-          0
+          0,
         )
         .call(
           () => {
             const newArray = isFlippedDealer;
-            newArray[dealerHand.length - 1] =
-              dealerHand.length === 2 ? true : false;
+            newArray[dealerHand.length - 1] = dealerHand.length === 2;
             setIsFlippedDealer(newArray);
           },
           null,
-          0.25
+          0.25,
         );
     }
 
@@ -609,11 +647,11 @@ function Game({ userId }) {
     let aces = 0;
 
     playerHand.forEach(({ value }) => {
-      if (value === "A") {
+      if (value === 'A') {
         score += 1;
         totalScore += 11;
         aces += 1;
-      } else if (typeof value === "string") {
+      } else if (typeof value === 'string') {
         score += 10;
         totalScore += 10;
       } else {
@@ -637,11 +675,11 @@ function Game({ userId }) {
 
     dealerHand.forEach(({ value }, i) => {
       if (i !== 1 || isStand) {
-        if (value === "A") {
+        if (value === 'A') {
           score += 1;
           totalScore += 11;
           aces += 1;
-        } else if (typeof value === "string") {
+        } else if (typeof value === 'string') {
           score += 10;
           totalScore += 10;
         } else {
@@ -663,18 +701,14 @@ function Game({ userId }) {
   useEffect(() => {
     if (isStand) {
       if (
-        (dealerScore <= 16 || dealerTotalScore <= 16) &&
-        dealerTotalScore <= 21 &&
-        !isAnimating
+        (dealerScore <= 16 && !isAnimating) ||
+        (dealerTotalScore <= 16 && dealerTotalScore <= 21 && !isAnimating)
       ) {
         setIsAnimating(true);
-        handleDeal("dealer", true);
+        handleDeal('dealer', true);
       }
 
-      if (
-        dealerScore >= 17 ||
-        (dealerTotalScore >= 17 && dealerTotalScore <= 21)
-      ) {
+      if (dealerScore >= 17 || (dealerTotalScore >= 17 && dealerTotalScore <= 21)) {
         setIsEnd(true);
       }
     }
@@ -683,33 +717,37 @@ function Game({ userId }) {
   }, [dealerScore, dealerTotalScore, isStand, isAnimating]);
 
   useEffect(() => {
-    if (winner || isDraw) {
-      if (isStand) {
-        setCurrentAction("win");
-      } else {
-        setIsFlippedDealer([false, false]);
-        setTimeout(() => {
-          setCurrentAction("win");
-        }, 1000);
+    if (isGame) {
+      if (winner || isDraw) {
+        if (isStand) {
+          setCurrentAction('win');
+        } else {
+          setIsFlippedDealer([false, false]);
+          setTimeout(() => {
+            setCurrentAction('win');
+          }, 1000);
+        }
       }
     }
-  }, [winner, isDraw, isStand]);
+  }, [winner, isDraw, isStand, isGame]);
 
   const handleDeal = (destination, isFlipped = false) => {
-    setIsDisabled(true);
-    const card = deal(deck);
+    if (isGame) {
+      setIsDisabled(true);
+      const card = deal(deck);
 
-    if (destination === "player") {
-      setIsFlippedPlayer((prevFlipped) => [...prevFlipped, true]);
-      setPlayerHand((prevHand) => [...prevHand, card]);
-    } else {
-      setIsFlippedDealer((prevFlipped) => [...prevFlipped, isFlipped]);
-      setDealerHand((prevHand) => [...prevHand, card]);
+      if (destination === 'player') {
+        setIsFlippedPlayer((prevFlipped) => [...prevFlipped, true]);
+        setPlayerHand((prevHand) => [...prevHand, card]);
+      } else {
+        setIsFlippedDealer((prevFlipped) => [...prevFlipped, isFlipped]);
+        setDealerHand((prevHand) => [...prevHand, card]);
+      }
+
+      setTimeout(() => {
+        setIsDisabled(false);
+      }, 1250);
     }
-
-    setTimeout(() => {
-      setIsDisabled(false);
-    }, 1250);
   };
 
   const handleBet = (bet) => {
@@ -723,18 +761,18 @@ function Game({ userId }) {
       setLastStake(parseFloat(bet));
     }, 1000);
 
-    setCurrentAction("decision");
+    setCurrentAction('decision');
   };
 
   const handleStand = () => {
-    setCurrentAction("stand");
+    setCurrentAction('stand');
   };
 
   const handleDoubleDown = () => {
     setIsDisabled(true);
-    setBalance(balance - stake * 2);
+    setBalance(balance - stake);
     setStake(stake * 2);
-    handleDeal("player");
+    handleDeal('player');
 
     setTimeout(() => {
       handleStand();
@@ -746,9 +784,8 @@ function Game({ userId }) {
   ) : (
     <Wrapper>
       {isBankrupt && <Modal />}
-      {(winner || isDraw) && (
-        <Winner winner={winner} isBlackjack={isBlackjack} isDraw={isDraw} />
-      )}
+      {(winner || isDraw) && <Winner winner={winner} isBlackjack={isBlackjack} isDraw={isDraw} />}
+      <Chat logs={logs} />
       <LeaveButton to="/" ref={leaveRef}>
         <Icon icon={faArrowLeft} />
         <StyledParagraph>Leave table</StyledParagraph>
@@ -770,28 +807,13 @@ function Game({ userId }) {
         ))}
       </PlayerHand>
       {playerScore !== 0 && (
-        <Score
-          isWin={winner === "player"}
-          isLose={winner === "dealer"}
-          isDraw={isDraw}
-          player
-        >
-          <CountUp
-            start={prevPlayerScore}
-            end={playerScore}
-            duration={1}
-            delay={0}
-          />
+        <Score isWin={winner === 'player'} isLose={winner === 'dealer'} isDraw={isDraw} player>
+          <CountUp start={prevPlayerScore} end={playerScore} duration={1} delay={0} />
           {isAcePlayer ? (
             <>
-              {" "}
-              /{" "}
-              <CountUp
-                start={prevPlayerTotalScore}
-                end={playerTotalScore}
-                duration={1}
-                delay={0}
-              />
+              {' '}
+              /{' '}
+              <CountUp start={prevPlayerTotalScore} end={playerTotalScore} duration={1} delay={0} />
             </>
           ) : null}
         </Score>
@@ -808,37 +830,19 @@ function Game({ userId }) {
         ))}
       </DealerHand>
       {dealerScore !== 0 && (
-        <Score
-          isWin={winner === "dealer"}
-          isLose={winner === "player"}
-          isDraw={isDraw}
-        >
-          <CountUp
-            start={prevDealerScore}
-            end={dealerScore}
-            duration={1}
-            delay={0}
-          />
+        <Score isWin={winner === 'dealer'} isLose={winner === 'player'} isDraw={isDraw}>
+          <CountUp start={prevDealerScore} end={dealerScore} duration={1} delay={0} />
           {isAceDealer ? (
             <>
-              {" "}
-              /{" "}
-              <CountUp
-                start={prevDealerTotalScore}
-                end={dealerTotalScore}
-                duration={1}
-                delay={0}
-              />
+              {' '}
+              /{' '}
+              <CountUp start={prevDealerTotalScore} end={dealerTotalScore} duration={1} delay={0} />
             </>
           ) : null}
         </Score>
       )}
       <Controls ref={betControlsRef}>
-        <Button
-          type="button"
-          onClick={() => handleBet(min)}
-          disabled={isDisabled}
-        >
+        <Button type="button" onClick={() => handleBet(min)} disabled={isDisabled}>
           Min. ${min}
         </Button>
 
@@ -847,17 +851,12 @@ function Game({ userId }) {
           onClick={() => handleBet(isAllIn ? balance : max)}
           disabled={isDisabled}
         >
-          {isAllIn ? `All in` : `Max. $${max}`}
+          {isAllIn ? 'All in' : `Max. $${max}`}
         </Button>
 
         <SliderContainer>
           <Row>
-            <Button
-              type="button"
-              margin
-              onClick={() => handleBet(stake)}
-              disabled={isDisabled}
-            >
+            <Button type="button" margin onClick={() => handleBet(stake)} disabled={isDisabled}>
               CONFIRM
             </Button>
           </Row>
@@ -912,11 +911,7 @@ function Game({ userId }) {
         </Button>
       </Controls>
       <Controls ref={decisionControlsRef}>
-        <Button
-          type="button"
-          onClick={() => handleDeal("player")}
-          disabled={isDisabled}
-        >
+        <Button type="button" onClick={() => handleDeal('player')} disabled={isDisabled}>
           HIT
         </Button>
 
@@ -924,16 +919,20 @@ function Game({ userId }) {
           STAND
         </Button>
 
-        <Button
-          type="button"
-          onClick={handleDoubleDown}
-          disabled={isDisabled || !canDoubleDown}
-        >
-          DOUBLE {canDoubleDown && `$${stake * 2}`}
+        <Button type="button" onClick={handleDoubleDown} disabled={isDisabled || !canDoubleDown}>
+          DOUBLE {canDoubleDown && `$${stake}`}
         </Button>
       </Controls>
     </Wrapper>
   );
 }
+
+Game.propTypes = {
+  userId: PropTypes.string,
+};
+
+Game.defaultProps = {
+  userId: null,
+};
 
 export default Game;

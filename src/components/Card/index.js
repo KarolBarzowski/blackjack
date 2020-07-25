@@ -1,7 +1,8 @@
-import React from "react";
-import styled, { css } from "styled-components";
-import ReactCardFlip from "react-card-flip";
-import Reverse from "components/Reverse";
+import React from 'react';
+import PropTypes from 'prop-types';
+import styled, { css } from 'styled-components';
+import ReactCardFlip from 'react-card-flip';
+import Reverse from 'components/Reverse';
 
 const Container = styled.div`
   position: absolute;
@@ -21,8 +22,7 @@ const Wrapper = styled.div`
   width: 14.4rem;
   padding: 0 0.5rem;
   background-color: #ffffff;
-  box-shadow: 0.3rem -0.3rem 5px rgba(0, 0, 0, 0.16),
-    0.3rem -0.3rem 5px rgba(0, 0, 0, 0.23),
+  box-shadow: 0.3rem -0.3rem 5px rgba(0, 0, 0, 0.16), 0.3rem -0.3rem 5px rgba(0, 0, 0, 0.23),
     -0.3rem 0.3rem 5px rgba(0, 0, 0, 0.23);
   border-radius: 1rem;
   user-select: none;
@@ -41,7 +41,7 @@ const Bottom = styled(Top)`
 `;
 
 const CardValue = styled.p`
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 3.4rem;
   font-weight: 600;
   color: ${({ color, theme }) => theme[color]};
@@ -96,5 +96,19 @@ function Card({ isFlipped, value, suit, color }) {
     </Container>
   );
 }
+
+Card.propTypes = {
+  isFlipped: PropTypes.bool,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  suit: PropTypes.string,
+  color: PropTypes.string,
+};
+
+Card.defaultProps = {
+  isFlipped: false,
+  value: null,
+  suit: null,
+  color: null,
+};
 
 export default Card;

@@ -1,5 +1,6 @@
-import React from "react";
-import styled, { keyframes, css } from "styled-components";
+import React from 'react';
+import PropTypes from 'prop-types';
+import styled, { keyframes, css } from 'styled-components';
 
 const Appear = keyframes`
     from {
@@ -47,15 +48,13 @@ const Wrapper = styled.div`
   flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
-  background-color: ${({ isWin }) =>
-    isWin ? "rgba(48, 209, 88, .6)" : "rgba(255, 69, 58, .6)"};
+  background-color: ${({ isWin }) => (isWin ? 'rgba(48, 209, 88, .6)' : 'rgba(255, 69, 58, .6)')};
   height: 14.4rem;
   width: 100%;
   transform: translateY(-50%);
   opacity: 0;
   z-index: 3;
-  animation: ${Appear} 0.3s ease-in-out 0.3s forwards,
-    ${Disappear} 0.3s ease-in-out 2.8s forwards;
+  animation: ${Appear} 0.3s ease-in-out 0.3s forwards, ${Disappear} 0.3s ease-in-out 2.8s forwards;
   overflow: hidden;
 
   ${({ isDraw }) =>
@@ -67,26 +66,38 @@ const Wrapper = styled.div`
 
 const Text = styled.h1`
   font-size: 3.4rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   text-shadow: #000000 0px 0px 7px;
   animation: ${SlideInOut} 3s ease-in-out forwards;
 `;
 
 const Winner = ({ winner, isBlackjack, isDraw }) => (
-  <Wrapper isWin={winner === "player"} isDraw={isDraw}>
+  <Wrapper isWin={winner === 'player'} isDraw={isDraw}>
     <Text>
-      {winner === "player"
+      {winner === 'player'
         ? isBlackjack
           ? isDraw
-            ? "Draw!"
-            : "BLACKJACK! You win!"
-          : "You win!"
+            ? 'Draw!'
+            : 'BLACKJACK! You won!'
+          : 'You won!'
         : isDraw
-        ? "Draw!"
-        : "You lose!"}
+        ? 'Draw!'
+        : 'You lost!'}
     </Text>
   </Wrapper>
 );
+
+Winner.propTypes = {
+  winner: PropTypes.string,
+  isBlackjack: PropTypes.bool,
+  isDraw: PropTypes.bool,
+};
+
+Winner.defaultProps = {
+  winner: null,
+  isBlackjack: false,
+  isDraw: false,
+};
 
 export default Winner;

@@ -1,6 +1,6 @@
-import React from "react";
-import styled from "styled-components";
-import Heading from "components/Heading";
+import React from 'react';
+import styled from 'styled-components';
+import Heading from 'components/Heading';
 
 const Wrapper = styled.main`
   min-height: 100vh;

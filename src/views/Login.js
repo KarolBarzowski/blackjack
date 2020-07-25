@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from "react";
-import styled, { css } from "styled-components";
-import { auth, session, database } from "helpers/firebase";
-import { Redirect } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUserCircle,
-  faAt,
-  faKey,
-  faEye,
-  faEyeSlash,
-} from "@fortawesome/free-solid-svg-icons";
-import Heading from "components/Heading";
+import React, { useState, useEffect } from 'react';
+import styled, { css } from 'styled-components';
+import { auth, session, database } from 'helpers/firebase';
+import { Redirect } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserCircle, faAt, faKey, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import Heading from 'components/Heading';
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -27,7 +21,7 @@ const StyledHeading = styled(Heading)`
 
 const StyledParagraph = styled.p`
   font-size: 1.6rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   margin: 1rem 0;
 `;
@@ -42,8 +36,7 @@ const Form = styled.form`
   padding: 1.5rem 1.5rem 2.5rem;
   width: 40rem;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.12),
-    0 4px 4px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.12),
-    0 16px 16px rgba(0, 0, 0, 0.12);
+    0 4px 4px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.12), 0 16px 16px rgba(0, 0, 0, 0.12);
 `;
 
 const Label = styled.label`
@@ -63,7 +56,7 @@ const Input = styled.input`
   background-color: transparent;
   padding: 1rem 1.5rem;
   color: rgb(255, 255, 255, 0.87);
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.6rem;
   font-weight: 500;
   width: 26.2rem;
@@ -91,13 +84,13 @@ const PasswordInput = styled(Input)`
   width: 22rem;
 `;
 
-const Link = styled.button`
+const ButtonLink = styled.button`
   background-color: transparent;
   border: none;
   margin: 0;
   padding: 0;
   font-size: 1.6rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   color: rgb(10, 132, 255);
   text-decoration: underline;
@@ -118,7 +111,7 @@ const Button = styled.button`
   border-radius: 0.5rem;
   padding: 1rem 1.5rem;
   font-size: 1.6rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   margin-top: 0.5rem;
   background-color: rgb(10, 132, 255);
@@ -148,7 +141,7 @@ const Row = styled.div`
 `;
 
 const Error = styled.p`
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.6rem;
   font-weight: 500;
   color: rgb(255, 69, 58);
@@ -184,7 +177,7 @@ const StyledCheckbox = styled.div`
   display: inline-block;
   width: 21px;
   height: 21px;
-  background: ${({ checked, theme }) => (checked ? theme.blue : "white")};
+  background: ${({ checked, theme }) => (checked ? theme.blue : 'white')};
   border-radius: 3px;
   margin-right: 0.5rem;
   transition: box-shadow 150ms;
@@ -194,7 +187,7 @@ const StyledCheckbox = styled.div`
   }
 
   ${Icon} {
-    visibility: ${({ isChecked }) => (isChecked ? "visible" : "hidden")};
+    visibility: ${({ isChecked }) => (isChecked ? 'visible' : 'hidden')};
   }
 `;
 
@@ -214,14 +207,14 @@ const Checkmark = styled.svg`
 
 function Login() {
   const [isUser, setIsUser] = useState(false);
-  const [nick, setNick] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [nick, setNick] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState('');
   const [isRemember, setIsRemember] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -247,30 +240,30 @@ function Login() {
         setErrorMsg(`Password min. 6 characters!`);
       } else {
         setIsError(false);
-        setTimeout(() => setErrorMsg(""), 400);
+        setTimeout(() => setErrorMsg(''), 400);
       }
     } else {
       setIsError(false);
-      setTimeout(() => setErrorMsg(""), 400);
+      setTimeout(() => setErrorMsg(''), 400);
     }
   }, [password, confirmPassword, isRegister]);
 
   const getErrorMsg = (code) => {
     switch (code) {
-      case "auth/email-already-in-use":
-        return "Email is already taken!";
-      case "auth/invalid-email":
-        return "Invalid email!";
-      case "auth/operation-not-allowed":
-        return "Error!";
-      case "auth/weak-password":
-        return "Password min. 6 characters!";
-      case "auth/user-disabled":
-        return "Account is disabled!";
-      case "auth/wrong-password":
-        return "Wrong password!";
-      case "auth/user-not-found":
-        return "User not found!";
+      case 'auth/email-already-in-use':
+        return 'Email is already taken!';
+      case 'auth/invalid-email':
+        return 'Invalid email!';
+      case 'auth/operation-not-allowed':
+        return 'Error!';
+      case 'auth/weak-password':
+        return 'Password min. 6 characters!';
+      case 'auth/user-disabled':
+        return 'Account is disabled!';
+      case 'auth/wrong-password':
+        return 'Wrong password!';
+      case 'auth/user-not-found':
+        return 'User not found!';
       default:
         break;
     }
@@ -282,15 +275,16 @@ function Login() {
     if (isRegister) {
       if (!nick.length) {
         setIsError(true);
-        setErrorMsg("What about nickname?");
+        setErrorMsg('What about nickname?');
         setIsValidating(false);
       } else {
         auth
           .createUserWithEmailAndPassword(email, password)
           .then(() => {
-            database.ref("users/" + auth.currentUser.uid).set({
+            database.ref(`users/${auth.currentUser.uid}`).set({
               nickname: nick,
               balance: 200,
+              avatarId: Math.floor(Math.random() * 4),
             });
             setIsValidating(false);
           })
@@ -382,7 +376,7 @@ function Login() {
         </Form>
       ) : (
         <Form onSubmit={handleValidate}>
-          <StyledHeading>{isRegister ? "Sign up" : "Sign in"}</StyledHeading>
+          <StyledHeading>{isRegister ? 'Sign up' : 'Sign in'}</StyledHeading>
           {isRegister && (
             <Row>
               <Label htmlFor="nick">
@@ -416,17 +410,14 @@ function Login() {
               <Icon icon={faKey} />
             </Label>
             <PasswordInput
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               id="password"
               name="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <PasswordBtn
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <PasswordBtn type="button" onClick={() => setShowPassword(!showPassword)}>
               <Icon icon={showPassword ? faEyeSlash : faEye} fixedWidth />
             </PasswordBtn>
           </Row>
@@ -436,7 +427,7 @@ function Login() {
                 <Icon icon={faKey} />
               </Label>
               <Input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 name="confirmPassword"
                 placeholder="Confirm password"
@@ -462,23 +453,18 @@ function Login() {
           )}
           <Error appear={isError}>{errorMsg}</Error>
           <Button type="submit" disabled={isValidating}>
-            {isRegister ? "Sign up" : "Login"}
+            {isRegister ? 'Sign up' : 'Login'}
           </Button>
           <StyledParagraph>
-            {isRegister
-              ? "Already have an account?"
-              : "Doesn't have an account?"}
-            <Link type="button" onClick={() => setIsRegister(!isRegister)}>
-              {isRegister ? "Sign in!" : "Sign up!"}
-            </Link>
+            {isRegister ? 'Already have an account?' : "Doesn't have an account?"}
+            <ButtonLink type="button" onClick={() => setIsRegister(!isRegister)}>
+              {isRegister ? 'Sign in!' : 'Sign up!'}
+            </ButtonLink>
           </StyledParagraph>
           {!isRegister && (
-            <Link
-              type="button"
-              onClick={() => setIsForgotPassword(!isForgotPassword)}
-            >
+            <ButtonLink type="button" onClick={() => setIsForgotPassword(!isForgotPassword)}>
               Forgot password?
-            </Link>
+            </ButtonLink>
           )}
         </Form>
       )}

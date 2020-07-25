@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import styled, { css } from "styled-components";
-import { SlideIn, Disappear } from "helpers/animations";
+import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
+import styled, { css } from 'styled-components';
+import { SlideIn, Disappear } from 'helpers/animations';
 
 const ChatMsg = styled.p`
   font-size: 1.6rem;
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 400;
   margin: 0.25rem 0 0;
   padding: 0.8rem;
@@ -94,19 +95,25 @@ function Chat({ logs }) {
     <ChatContainer
       hide={isChatHidden}
       onMouseOver={handleChatAppear}
+      onFocus={handleChatAppear}
       onMouseOut={handleChatDisappear}
+      onBlur={handleChatDisappear}
     >
       {logs.map(({ time, msg }, i) => (
-        <ChatMsg
-          key={i.toString()}
-          hide={logs.length - 6 >= i}
-          disappear={i !== logs.length - 1}
-        >
+        <ChatMsg key={i.toString()} hide={logs.length - 6 >= i} disappear={i !== logs.length - 1}>
           <BlueParagraph>[{time}]</BlueParagraph> {msg}
         </ChatMsg>
       ))}
     </ChatContainer>
   );
 }
+
+Chat.propTypes = {
+  logs: PropTypes.arrayOf(PropTypes.object),
+};
+
+Chat.defaultProps = {
+  logs: [],
+};
 
 export default Chat;
