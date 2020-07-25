@@ -37,7 +37,7 @@ const Wrapper = styled.div`
 
 const Content = styled.div`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
   align-items: center;
   justify-content: space-around;
   height: 100%;
@@ -51,7 +51,7 @@ const Tile = styled.button`
   align-items: center;
   justify-content: space-around;
   align-self: center;
-  height: 50%;
+  height: 45%;
   width: 30%;
   padding: 3rem;
   text-decoration: none;

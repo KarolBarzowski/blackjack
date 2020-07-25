@@ -222,6 +222,8 @@ function Game({ userId }) {
       case minStake === 1:
       case minStake === 500:
       case minStake === 3000:
+      case minStake === 10000:
+      case minStake === 15000:
         setMin(minStake);
         setStake(minStake);
         break;
@@ -235,6 +237,8 @@ function Game({ userId }) {
       case maxStake === 300:
       case maxStake === 1500:
       case maxStake === 9000:
+      case maxStake === 15000:
+      case maxStake === 30000:
         setMax(maxStake);
         break;
 
