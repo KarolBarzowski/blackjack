@@ -14,6 +14,7 @@ import Paragraph from 'components/Paragraph';
 import Bank from 'components/Bank';
 import Button from 'components/Button';
 import Leaderboard from 'components/Leaderboard';
+import Header from 'components/Header';
 
 const Container = styled.div`
   display: flex;
@@ -133,36 +134,39 @@ function Tables({ userId }) {
       {isLoading ? (
         <FontAwesomeIcon icon={faSpinner} size="4x" spin />
       ) : (
-        <Wrapper>
-          <Sidebar
-            nickname={nickname}
-            balance={balance}
-            avatarId={avatarId}
-            active={active}
-            setActive={setActive}
-          />
-          <Content>
-            {active === 'play' &&
-              stakes.map((stake, i) => (
-                <Tile
-                  type="button"
-                  onClick={() => handlePlay(i)}
-                  disabled={balance < stake[0]}
-                  key={i.toString()}
-                >
-                  <div>
-                    <StyledParagraph>Stakes</StyledParagraph>
-                    <Paragraph>
-                      ${getLabel(stake[0])} - ${getLabel(stake[1])}
-                    </Paragraph>
-                  </div>
-                  <Button as={Paragraph}>Play</Button>
-                </Tile>
-              ))}
-            {active === 'bank' && <Bank userId={userId} />}
-            {active === 'leaderboard' && <Leaderboard userId={userId} />}
-          </Content>
-        </Wrapper>
+        <>
+          <Header />
+          <Wrapper>
+            <Sidebar
+              nickname={nickname}
+              balance={balance}
+              avatarId={avatarId}
+              active={active}
+              setActive={setActive}
+            />
+            <Content>
+              {active === 'play' &&
+                stakes.map((stake, i) => (
+                  <Tile
+                    type="button"
+                    onClick={() => handlePlay(i)}
+                    disabled={balance < stake[0]}
+                    key={i.toString()}
+                  >
+                    <div>
+                      <StyledParagraph>Stakes</StyledParagraph>
+                      <Paragraph>
+                        ${getLabel(stake[0])} - ${getLabel(stake[1])}
+                      </Paragraph>
+                    </div>
+                    <Button as={Paragraph}>Play</Button>
+                  </Tile>
+                ))}
+              {active === 'bank' && <Bank userId={userId} />}
+              {active === 'leaderboard' && <Leaderboard userId={userId} />}
+            </Content>
+          </Wrapper>
+        </>
       )}
     </Container>
   );

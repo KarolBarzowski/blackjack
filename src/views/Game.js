@@ -370,6 +370,14 @@ function Game({ userId }) {
               (prevBalance) =>
                 prevBalance + parseFloat(stake) + parseFloat(stake) * (isBlackjack ? 1.5 : 1),
             );
+
+            const casinoBal = database.ref('casinoBalance');
+
+            casinoBal.once('value').then((snapshot) => {
+              casinoBal.set(
+                snapshot.val() - (parseFloat(stake) + parseFloat(stake) * (isBlackjack ? 1.5 : 1)),
+              );
+            });
           } else if (isDraw) {
             setBalance((prevBalance) => prevBalance + parseFloat(stake));
           }
@@ -759,6 +767,11 @@ function Game({ userId }) {
     setIsDisabled(true);
 
     setBalance((prevBalance) => prevBalance - parseFloat(bet));
+    const casinoBal = database.ref('casinoBalance');
+
+    casinoBal.once('value').then((snapshot) => {
+      casinoBal.set(snapshot.val() + parseFloat(bet));
+    });
 
     setStake(parseFloat(bet));
     setTimeout(() => {
