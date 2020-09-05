@@ -312,6 +312,8 @@ function Game({ userId }) {
 
       gsap.defaults({ ease: 'power2.inOut', duration: 0.75 });
 
+      const casinoBal = database.ref('casinoBalance');
+
       switch (currentAction) {
         case 'bet':
           gsap
@@ -371,8 +373,6 @@ function Game({ userId }) {
                 prevBalance + parseFloat(stake) + parseFloat(stake) * (isBlackjack ? 1.5 : 1),
             );
 
-            const casinoBal = database.ref('casinoBalance');
-
             casinoBal.once('value').then((snapshot) => {
               casinoBal.set(
                 snapshot.val() - (parseFloat(stake) + parseFloat(stake) * (isBlackjack ? 1.5 : 1)),
@@ -380,6 +380,10 @@ function Game({ userId }) {
             });
           } else if (isDraw) {
             setBalance((prevBalance) => prevBalance + parseFloat(stake));
+
+            casinoBal.once('value').then((snapshot) => {
+              casinoBal.set(snapshot.val() - parseFloat(stake));
+            });
           }
 
           setLogs((prevLogs) => [
@@ -790,6 +794,12 @@ function Game({ userId }) {
     setBalance(balance - stake);
     setStake(stake * 2);
     handleDeal('player');
+
+    const casinoBal = database.ref('casinoBalance');
+
+    casinoBal.once('value').then((snapshot) => {
+      casinoBal.set(snapshot.val() + parseFloat(stake));
+    });
 
     setTimeout(() => {
       handleStand();
