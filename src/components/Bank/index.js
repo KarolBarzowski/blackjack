@@ -112,8 +112,11 @@ function Bank({ userId }) {
   const [isConfirm, setIsConfirm] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [value, setValue] = useState(0);
+  const [loanValue, setLoanValue] = useState();
   const [isError, setIsError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isLoanError, setIsLoanError] = useState(false);
+  const [loanErrorMsg, setLoanErrorMsg] = useState('');
 
   useEffect(() => {
     database.ref(`/users/${userId}/debt`).on('value', (snapshot) => setDebt(snapshot.val() || 0));
@@ -156,6 +159,20 @@ function Bank({ userId }) {
     );
   };
 
+  const handleTakeCustomLoan = () => {
+    if (loanValue <= 0) {
+      setIsLoanError(true);
+      setLoanErrorMsg('Amount must be greater than 0!');
+    } else {
+      setIsLoanError(false);
+      setLoanValue(0);
+      database.ref(`/users/${userId}`).update({
+        balance: balance + parseFloat(loanValue),
+        debt: debt + parseFloat(loanValue) * 2,
+      });
+    }
+  };
+
   const handlePay = () => {
     if (value <= 0) {
       setIsError(true);
@@ -195,6 +212,27 @@ function Bank({ userId }) {
             </Button>
             {isError && <Error>{errorMsg}</Error>}
           </Row>
+        ) : null}
+      </div>
+      <div>
+        <Paragraph>Take a custom loan:</Paragraph>
+        <Row>
+          <Input
+            type="number"
+            placeholder="Amount"
+            min={1}
+            value={loanValue}
+            onChange={(e) => setLoanValue(e.target.value)}
+          />
+          <Button type="button" onDoubleClick={handleTakeCustomLoan}>
+            Take
+          </Button>
+          <StyledParagraph>Click twice to take</StyledParagraph>
+        </Row>
+        {isLoanError && <Error>{loanErrorMsg}</Error>}
+        {loanValue < 0 ? <Error>Amount must be greater than 0!</Error> : null}
+        {loanValue ? (
+          <StyledParagraph>Your payoff: ${parseFloat(loanValue) * 2}</StyledParagraph>
         ) : null}
       </div>
       <div>
