@@ -80,6 +80,7 @@ const Balance = styled.span`
 
 function Leaderboard({ userId }) {
   const [list, setList] = useState(null);
+  const [isUpdate, setIsUpdate] = useState(0);
 
   useEffect(() => {
     const listOfUsers = [];
@@ -99,8 +100,25 @@ function Leaderboard({ userId }) {
 
         listOfUsers.push(userObject);
       });
+
       listOfUsers.sort((a, b) => b.balance - a.balance);
       setList(listOfUsers);
+    });
+  }, [isUpdate]);
+
+  useEffect(() => {
+    const usersRef = database.ref('users');
+
+    usersRef.on('child_added', () => {
+      setIsUpdate((prevState) => prevState + 1);
+    });
+
+    usersRef.on('child_changed', () => {
+      setIsUpdate((prevState) => prevState + 1);
+    });
+
+    usersRef.on('child_removed', () => {
+      setIsUpdate((prevState) => prevState + 1);
     });
   }, []);
 
