@@ -1,18 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { auth, session, database } from 'helpers/firebase';
 import { Redirect } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle, faAt, faKey, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import gsap from 'gsap';
 import Heading from 'components/Heading';
+import Card from 'components/Card';
+import backgroundPattern from 'assets/images/bg.png';
+import { ReactComponent as Text } from 'assets/images/text.svg';
 
 const Wrapper = styled.div`
   min-height: 100vh;
   width: 100%;
   display: flex;
-  flex-flow: column nowrap;
+  flex-flow: row nowrap;
+  overflow: hidden;
+`;
+
+const Background = styled.div`
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
   justify-content: center;
+  background-color: ${({ theme }) => theme.table};
+  background-image: url(${backgroundPattern});
+  background-repeat: repeat;
+  box-shadow: inset 1px 1px 120px 30px rgba(3, 3, 3, 0.5);
+`;
+
+const TableText = styled.div`
+  position: absolute;
+  top: 22%;
+  display: flex;
+  flex-flow: column nowrap;
   align-items: center;
+  user-select: none;
+`;
+
+const UserCardsWrapper = styled.div`
+  position: absolute;
+  bottom: 28.8rem;
+  left: calc(50% - 5.5rem);
+  transform: translateX(-50%);
+`;
+
+const DealerCardsWrapper = styled.div`
+  position: absolute;
+  top: 5.5rem;
+  left: calc(50% - 5.5rem);
+  transform: translateX(-50%);
 `;
 
 const StyledHeading = styled(Heading)`
@@ -27,14 +65,14 @@ const StyledParagraph = styled.p`
 `;
 
 const Form = styled.form`
+  height: 100vh;
   display: flex;
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
   background-color: ${({ theme }) => theme.dark};
-  border-radius: 1.5rem;
   padding: 1.5rem 1.5rem 2.5rem;
-  width: 40rem;
+  min-width: 50rem;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.12),
     0 4px 4px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.12), 0 16px 16px rgba(0, 0, 0, 0.12);
 `;
@@ -206,6 +244,9 @@ const Checkmark = styled.svg`
 `;
 
 function Login() {
+  const userHandRef = useRef(null);
+  const dealerHandRef = useRef(null);
+
   const [isUser, setIsUser] = useState(false);
   const [nick, setNick] = useState('');
   const [email, setEmail] = useState('');
@@ -247,6 +288,34 @@ function Login() {
       setTimeout(() => setErrorMsg(''), 400);
     }
   }, [password, confirmPassword, isRegister]);
+
+  useEffect(() => {
+    const tl = gsap.timeline();
+
+    tl.fromTo(
+      userHandRef.current.children[0],
+      { visibility: 'visible' },
+      { rotate: -3, duration: 0.75, delay: 0.25 },
+    )
+      .fromTo(
+        userHandRef.current.children[1],
+        { visibility: 'visible', x: 55 },
+        { rotate: 3, duration: 0.75, delay: 0.25 },
+        0,
+      )
+      .fromTo(
+        dealerHandRef.current.children[0],
+        { visibility: 'visible' },
+        { rotate: -3, duration: 0.75, delay: 0.25 },
+        0,
+      )
+      .fromTo(
+        dealerHandRef.current.children[1],
+        { visibility: 'visible', x: 55 },
+        { rotate: 3, duration: 0.75, delay: 0.25 },
+        0,
+      );
+  }, []);
 
   const getErrorMsg = (code) => {
     switch (code) {
@@ -469,6 +538,19 @@ function Login() {
           )}
         </Form>
       )}
+      <Background>
+        <TableText>
+          <Text />
+        </TableText>
+        <DealerCardsWrapper ref={dealerHandRef}>
+          <Card value={4} suit="♠︎" color="black" />
+          <Card isFlipped value={9} suit="♣︎" color="black" />
+        </DealerCardsWrapper>
+        <UserCardsWrapper ref={userHandRef}>
+          <Card value={7} suit="♥︎" color="red" />
+          <Card value={10} suit="♣︎" color="black" />
+        </UserCardsWrapper>
+      </Background>
     </Wrapper>
   );
 }
