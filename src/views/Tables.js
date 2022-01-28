@@ -14,7 +14,7 @@ import Paragraph from 'components/Paragraph';
 import Bank from 'components/Bank';
 import Button from 'components/Button';
 import Leaderboard from 'components/Leaderboard';
-import Header from 'components/Header';
+// import Header from 'components/Header';
 
 const Container = styled.div`
   display: flex;
@@ -97,12 +97,10 @@ function Tables({ userId }) {
         .once('value')
         .then((snapshot) => {
           const { nickname, avatarId } = snapshot.val();
-
           setNickname(nickname);
           setAvatarId(avatarId);
           setIsLoading(false);
         });
-
       database
         .ref(`/users/${userId}/balance`)
         .on('value', (snapshot) => setBalance(snapshot.val()));
@@ -135,7 +133,7 @@ function Tables({ userId }) {
         <FontAwesomeIcon icon={faSpinner} size="4x" spin />
       ) : (
         <>
-          <Header />
+          {/* <Header /> */}
           <Wrapper>
             <Sidebar
               nickname={nickname}

@@ -112,11 +112,11 @@ function Bank({ userId }) {
   const [isConfirm, setIsConfirm] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [value, setValue] = useState(0);
-  const [loanValue, setLoanValue] = useState();
+  // const [loanValue, setLoanValue] = useState();
   const [isError, setIsError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [isLoanError, setIsLoanError] = useState(false);
-  const [loanErrorMsg, setLoanErrorMsg] = useState('');
+  // const [isLoanError, setIsLoanError] = useState(false);
+  // const [loanErrorMsg, setLoanErrorMsg] = useState('');
 
   useEffect(() => {
     database.ref(`/users/${userId}/debt`).on('value', (snapshot) => setDebt(snapshot.val() || 0));
@@ -159,19 +159,19 @@ function Bank({ userId }) {
     );
   };
 
-  const handleTakeCustomLoan = () => {
-    if (loanValue <= 0) {
-      setIsLoanError(true);
-      setLoanErrorMsg('Amount must be greater than 0!');
-    } else {
-      setIsLoanError(false);
-      setLoanValue(0);
-      database.ref(`/users/${userId}`).update({
-        balance: balance + parseFloat(loanValue),
-        debt: debt + parseFloat(loanValue) * 2,
-      });
-    }
-  };
+  // const handleTakeCustomLoan = () => {
+  //   if (loanValue <= 0) {
+  //     setIsLoanError(true);
+  //     setLoanErrorMsg('Amount must be greater than 0!');
+  //   } else {
+  //     setIsLoanError(false);
+  //     setLoanValue(0);
+  //     database.ref(`/users/${userId}`).update({
+  //       balance: balance + parseFloat(loanValue),
+  //       debt: debt + parseFloat(loanValue) * 2,
+  //     });
+  //   }
+  // };
 
   const handlePay = () => {
     if (value <= 0) {
@@ -214,7 +214,7 @@ function Bank({ userId }) {
           </Row>
         ) : null}
       </div>
-      <div>
+      {/* <div>
         <Paragraph>Take a custom loan:</Paragraph>
         <Row>
           <Input
@@ -234,7 +234,7 @@ function Bank({ userId }) {
         {loanValue ? (
           <StyledParagraph>Your payoff: ${parseFloat(loanValue) * 2}</StyledParagraph>
         ) : null}
-      </div>
+      </div> */}
       <div>
         <Row>
           <StyledHeading>Available loans</StyledHeading>

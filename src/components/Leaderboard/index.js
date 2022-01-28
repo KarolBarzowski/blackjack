@@ -32,6 +32,7 @@ const List = styled.ul`
   width: 100%;
   padding: 0;
   margin: 0;
+  overflow-y: auto;
 `;
 
 const Item = styled.li`
@@ -89,16 +90,18 @@ function Leaderboard({ userId }) {
 
     usersRef.once('value', (snapshot) => {
       snapshot.forEach((childSnapshot) => {
-        const { balance, debt, avatarId, nickname } = childSnapshot.val();
+        const { balance, debt, avatarId, nickname, isGuest } = childSnapshot.val();
 
-        const userObject = {
-          nickname,
-          avatarId,
-          balance: parseFloat(balance) - parseFloat(debt),
-          id: childSnapshot.key,
-        };
+        if (!isGuest) {
+          const userObject = {
+            nickname,
+            avatarId,
+            balance: parseFloat(balance) - parseFloat(debt),
+            id: childSnapshot.key,
+          };
 
-        listOfUsers.push(userObject);
+          listOfUsers.push(userObject);
+        }
       });
 
       listOfUsers.sort((a, b) => b.balance - a.balance);

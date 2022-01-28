@@ -70,7 +70,7 @@ const Form = styled.form`
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
-  background-color: ${({ theme }) => theme.dark};
+  background-color: ${({ theme }) => theme.black};
   padding: 1.5rem 1.5rem 2.5rem;
   min-width: 50rem;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.12),
@@ -152,13 +152,13 @@ const Button = styled.button`
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   margin-top: 0.5rem;
-  background-color: rgb(10, 132, 255);
+  background-color: ${({ guest }) => (guest ? 'rgb(44, 44, 46)' : 'rgb(10, 132, 255)')};
   color: rgba(255, 255, 255, 0.87);
   cursor: pointer;
   transition: background-color 0.1s ease-in-out;
 
   :hover {
-    background-color: rgb(0, 122, 255);
+    background-color: ${({ guest }) => (guest ? 'rgb(58, 58, 60)' : 'rgb(0, 122, 255)')};
   }
 
   :disabled {
@@ -239,14 +239,13 @@ const CheckboxContainer = styled.label`
 
 const Checkmark = styled.svg`
   fill: none;
-  stroke: white;
+  stroke: #ffffff;
   stroke-width: 2px;
 `;
 
 function Login() {
   const userHandRef = useRef(null);
   const dealerHandRef = useRef(null);
-
   const [isUser, setIsUser] = useState(false);
   const [nick, setNick] = useState('');
   const [email, setEmail] = useState('');
@@ -295,24 +294,24 @@ function Login() {
     tl.fromTo(
       userHandRef.current.children[0],
       { visibility: 'visible' },
-      { rotate: -3, duration: 0.75, delay: 0.25 },
+      { rotate: -3, duration: 0.75, delay: 0.75 },
     )
       .fromTo(
         userHandRef.current.children[1],
         { visibility: 'visible', x: 55 },
-        { rotate: 3, duration: 0.75, delay: 0.25 },
+        { rotate: 3, duration: 0.75, delay: 0.75 },
         0,
       )
       .fromTo(
         dealerHandRef.current.children[0],
         { visibility: 'visible' },
-        { rotate: -3, duration: 0.75, delay: 0.25 },
+        { rotate: -3, duration: 0.75, delay: 0.75 },
         0,
       )
       .fromTo(
         dealerHandRef.current.children[1],
         { visibility: 'visible', x: 55 },
-        { rotate: 3, duration: 0.75, delay: 0.25 },
+        { rotate: 3, duration: 0.75, delay: 0.75 },
         0,
       );
   }, []);
@@ -405,6 +404,34 @@ function Login() {
     }, 500);
   };
 
+  const handleLoginAsGuest = () => {
+    setIsValidating(true);
+    auth
+      .signInAnonymously()
+      .then((result) => {
+        database
+          .ref(`users/${result.user.uid}`)
+          .set({
+            nickname: `Guest`,
+            balance: 1000,
+            avatarId: Math.floor(Math.random() * 4),
+            debt: 0,
+            isGuest: true,
+          })
+          .catch(() => {
+            setIsValidating(false);
+            setIsError(true);
+            setErrorMsg('There was a problem with database');
+          });
+        setIsValidating(false);
+      })
+      .catch(() => {
+        setIsValidating(false);
+        setIsError(true);
+        setErrorMsg('Unknown error. Try again later.');
+      });
+  };
+
   if (isUser) return <Redirect to="/" />;
 
   return (
@@ -415,9 +442,9 @@ function Login() {
           {isEmailSent ? (
             <>
               <StyledParagraph>Reset link sent to your email!</StyledParagraph>
-              <Button type="button" onClick={() => setIsForgotPassword(false)}>
+              <ButtonLink type="button" onClick={() => setIsForgotPassword(false)}>
                 Back to login
-              </Button>
+              </ButtonLink>
             </>
           ) : (
             <>
@@ -438,9 +465,11 @@ function Login() {
               <Button type="submit" disabled={isValidating}>
                 Reset password
               </Button>
-              <Button type="button" onClick={() => setIsForgotPassword(false)}>
-                Back to login
-              </Button>
+              <StyledParagraph>
+                <ButtonLink type="button" onClick={() => setIsForgotPassword(false)}>
+                  Back to login
+                </ButtonLink>
+              </StyledParagraph>
             </>
           )}
         </Form>
@@ -531,10 +560,17 @@ function Login() {
               {isRegister ? 'Sign in!' : 'Sign up!'}
             </ButtonLink>
           </StyledParagraph>
+          {!isRegister ? (
+            <Button type="button" disabled={isValidating} guest onClick={handleLoginAsGuest}>
+              Play as Guest
+            </Button>
+          ) : null}
           {!isRegister && (
-            <ButtonLink type="button" onClick={() => setIsForgotPassword(!isForgotPassword)}>
-              Forgot password?
-            </ButtonLink>
+            <StyledParagraph>
+              <ButtonLink type="button" onClick={() => setIsForgotPassword(!isForgotPassword)}>
+                Forgot password?
+              </ButtonLink>
+            </StyledParagraph>
           )}
         </Form>
       )}

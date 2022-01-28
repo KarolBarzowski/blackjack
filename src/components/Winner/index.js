@@ -9,7 +9,7 @@ const Appear = keyframes`
 
     to {
         opacity: 1;
-    };
+    }
 `;
 
 const Disappear = keyframes`
@@ -19,7 +19,7 @@ const Disappear = keyframes`
 
     to {
         opacity: 0;
-    };
+    }
 `;
 
 const SlideInOut = keyframes`
@@ -29,11 +29,11 @@ const SlideInOut = keyframes`
 
     25% {
         transform: translateX(0);
-    };
+    }
 
     75% {
         transform: translateX(0);
-    };
+    }
 
     100% {
         transform: translateX(100vw);
@@ -68,7 +68,7 @@ const Text = styled.h1`
   font-size: 3.4rem;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
-  text-shadow: #000000 0px 0px 7px;
+  text-shadow: #000000 0 0 7px;
   animation: ${SlideInOut} 3s ease-in-out forwards;
 `;
 
